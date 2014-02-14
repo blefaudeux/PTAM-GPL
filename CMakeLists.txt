@@ -22,5 +22,5 @@ include_directories(${BOOST_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DI
 # Recurse into the "libPTAM" and "camera_calibrator" subdirectories. This does not actually 
 # cause another cmake executable to run. The same process will walk through 
 # the project's entire directory structure.
-add_subdirectory (libPTAM) 
+add_subdirectory(libPTAM) 
 add_subdirectory(camera_calibrator)

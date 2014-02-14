@@ -29,17 +29,17 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Create static and dynamic libraries
+add_library (PTAMs STATIC ${SRC} ${HEADERS})
+add_library (PTAMd SHARED ${SRC} ${HEADERS})
 add_executable(PTAM ${SRC} ${HEADERS})
-add_library (PTAM_static STATIC ${SRC} ${HEADERS})
-add_library (PTAM_dynamic SHARED ${SRC} ${HEADERS})
 
 # Set the link libraries :
 set(LINK_LIBS  ${BOOST_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES})
 
+target_link_libraries(PTAMs ${LINK_LIBS})
+target_link_libraries(PTAMd ${LINK_LIBS})
 target_link_libraries(PTAM ${LINK_LIBS})
-target_link_libraries(PTAM_static ${LINK_LIBS})
-target_link_libraries(PTAM_dynamic ${LINK_LIBS})
 
 ### Define the installation procedure
-install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)
+install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)
 install(FILES ${HEADERS} DESTINATION ${PROJECT_SOURCE_DIR}/include)
