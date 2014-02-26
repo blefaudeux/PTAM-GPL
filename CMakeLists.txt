@@ -14,9 +14,9 @@ find_package(CVD REQUIRED)
 find_package(GVars3 REQUIRED)
 find_package(TooN REQUIRED)
 
-message("GVars3 used: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
-message("CVD used: \n ${CVD_INCLUDE_DIR}\n")
-message("TooN used: \n ${TOON_INCLUDE_DIR}\n")
+message("GVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
+message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")
+message("TooN found in: \n ${TOON_INCLUDE_DIR}\n")
 
 include_directories(${BOOST_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${LAPACK_INCLUDE_DIR} ${CVD_INCLUDE_DIR} ${GVARS3_INCLUDE_DIR} ${TOON_INCLUDE_DIR})
 

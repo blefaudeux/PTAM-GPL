@@ -3,6 +3,8 @@
 #include "OpenGL.h"
 #include <cvd/convolution.h>
 
+#define glMultMatrix glMultMatrixd
+
 using namespace CVD;
 
 EyeGame::EyeGame()
@@ -53,7 +55,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
       glScaled(mdEyeRadius, mdEyeRadius, mdEyeRadius);
       glCallList(mnEyeDisplayList);
     }
-  
+
   glDisable(GL_LIGHTING);
   
   glLoadIdentity();

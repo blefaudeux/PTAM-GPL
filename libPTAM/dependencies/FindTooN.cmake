@@ -16,6 +16,7 @@ find_path(TOON_INCLUDE_DIR
   NAMES TooN/TooN.h
   HINTS /usr/local/include
   PATHS ${TooN_PKGCONF_INCLUDE_DIRS}
+  PATH_SUFFIXES TooN
 )
 
 # Handle a plural naming..             

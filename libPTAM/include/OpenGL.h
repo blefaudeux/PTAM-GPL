@@ -2,6 +2,11 @@
 #ifndef __OPENGL_INCLUDES_H
 #define __OPENGL_INCLUDES_H
 
+// Ugly, but we skip the multiplatform in there
+#ifndef _LINUX
+  #define _LINUX
+#endif
+
 #ifdef _LINUX
 #include <GL/gl.h>
 #include <GL/glext.h>
