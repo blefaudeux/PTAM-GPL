@@ -22,7 +22,7 @@ set(GVARS3_LIBRARIES ${GVARS3_LIBRARY} )
 set(GVARS3_INCLUDE_DIRS ${GVARS3_INCLUDE_DIR} )
 
 include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE
+# handle the QUIETLY and REQUIRED arguments and set GVARS3 to TRUE
 # if all listed variables are TRUE
 find_package_handle_standard_args(GVars3  DEFAULT_MSG
                                   GVARS3_LIBRARY GVARS3_INCLUDE_DIR)

@@ -6,28 +6,24 @@
 #  TooN_INCLUDE_DIRS - the TooN include directories
 #  TooN_LIBRARIES - link these to use TooN
 
-include(LibFindMacros)
 
-# Dependencies
-#libfind_package(Magick++ Magick)
-
-# Use pkg-config to get hints about paths
-libfind_pkg_check_modules(TooN_PKGCONF TooN)
+find_package(PkgConfig)
+pkg_check_modules(PC_TooN QUIET TooN)
+set(TOON_DEFINITIONS ${PC_TooN_CFLAGS_OTHER})
 
 # Include dir
-find_path(TooN_INCLUDE_DIR
-  NAMES TooN.h
+find_path(TOON_INCLUDE_DIR
+  NAMES TooN/TooN.h
+  HINTS /usr/local/include
   PATHS ${TooN_PKGCONF_INCLUDE_DIRS}
 )
 
-# Finally the library itself
-find_library(TooN_LIBRARY
-  NAMES TooN
-  PATHS ${TooN_PKGCONF_LIBRARY_DIRS}
-)
+# Handle a plural naming..             
+set(TOON_INCLUDE_DIRS ${TOON_INCLUDE_DIR} )
 
-# Set the include dir variables and the libraries and let libfind_process do the rest.
-# NOTE: Singular variables for this library, plural for libraries this this lib depends on.
-set(TooN_PROCESS_INCLUDES TooN_INCLUDE_DIR TooN_INCLUDE_DIRS)
-set(TooN_PROCESS_LIBS TooN_LIBRARY TooN_LIBRARIES)
-libfind_process(TooN)
+include(FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(TooN  DEFAULT_MSG
+                                  TOON_INCLUDE_DIR)
+                                  
+mark_as_advanced(TOON_INCLUDE_DIR)
