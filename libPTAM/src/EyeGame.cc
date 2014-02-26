@@ -2,8 +2,7 @@
 #include "EyeGame.h"
 #include "OpenGL.h"
 #include <cvd/convolution.h>
-
-#define glMultMatrix glMultMatrixd
+//#include <private_fix.h>
 
 using namespace CVD;
 
