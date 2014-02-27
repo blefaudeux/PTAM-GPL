@@ -3,7 +3,7 @@ project (AR)
 
 # Get to know where all the dependencies are..
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/libPTAM/dependencies)
-message("Additional directory : ${CMAKE_MODULE_PATH}")
+message("Additional lookup directory : ${CMAKE_MODULE_PATH}")
 
 # Try to find the needed packages
 find_package(Boost REQUIRED)
@@ -24,4 +24,5 @@ include_directories(${BOOST_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DI
 # cause another cmake executable to run. The same process will walk through 
 # the project's entire directory structure.
 add_subdirectory(libPTAM) 
+add_subdirectory(pyPTAM)
 add_subdirectory(camera_calibrator)
