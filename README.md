@@ -25,7 +25,10 @@ http://www.robots.ox.ac.uk/~gk/PTAM/
 This code represents a re-licensed fork of Isis Innovation's PTAM Source Code Release v1.0-r114.
 
 
+BLefaudeux : 
 ---------------------
-/blefaudeux : CMakelist compilation, but TooN, libCVD and GVars3 must be installed beforehand. A lot easier to use and compile on Linux. 
-See E. Rosten Github (https://github.com/edrosten) to get up to date TooN, CVD and GVars3.
-/!\ install TooN before CVD /!\ 
+- CMakelist compilation, but TooN, libCVD and GVars3 must be installed beforehand. A lot easier to use and compile on Linux. See E. Rosten Github (https://github.com/edrosten) to get up to date TooN, CVD and GVars3. /!\ install TooN before CVD /!\ 
+
+- Added a basic Python interface (with a dedicated CMakelist, to be built after the original PTAM lib is built and installed), to instanciate a PTAM Slam from within Python
+
+---------------------
