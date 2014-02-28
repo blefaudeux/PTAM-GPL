@@ -12,7 +12,7 @@
 using namespace std;
 using namespace GVars3;
 
-int instanciate()
+void instanciate()
 {
   cout << " Starting the PTAM Slam " << endl;
   cout << "  Parsing settings.cfg ...." << endl;
@@ -36,7 +36,7 @@ int instanciate()
 }
 
 
-BOOST_PYTHON_MODULE(pyPTAM)
+BOOST_PYTHON_MODULE(libpyPTAM)
 {
     using namespace boost::python;
     def("instanciate", instanciate);
