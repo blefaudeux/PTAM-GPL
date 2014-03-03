@@ -29,6 +29,8 @@ class System
 public:
   System();
   void Run();
+
+  void GetCurrentPose(float *pose) const;
   
 private:
   VideoSource mVideoSource;

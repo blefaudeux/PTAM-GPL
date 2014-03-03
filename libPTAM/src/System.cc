@@ -31,12 +31,12 @@ System::System()
   Vector<2> v2;
   if(v2==v2) ;
   if(vTest == ATANCamera::mvDefaultParams)
-    {
-      cout << endl;
-      cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
-      cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
-      exit(1);
-    }
+  {
+    cout << endl;
+    cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
+    cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
+    exit(1);
+  }
   
   mpMap = new Map;
   mpMapMaker = new MapMaker(*mpMap, *mpCamera);
@@ -59,52 +59,53 @@ System::System()
 void System::Run()
 {
   while(!mbDone)
+  {
+
+    // We use two versions of each video frame:
+    // One black and white (for processing by the tracker etc)
+    // and one RGB, for drawing.
+
+    // Grab new video frame...
+    mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);
+    static bool bFirstFrame = true;
+    if(bFirstFrame)
     {
-      
-      // We use two versions of each video frame:
-      // One black and white (for processing by the tracker etc)
-      // and one RGB, for drawing.
-
-      // Grab new video frame...
-      mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);  
-      static bool bFirstFrame = true;
-      if(bFirstFrame)
-	{
-	  mpARDriver->Init();
-	  bFirstFrame = false;
-	}
-      
-      mGLWindow.SetupViewport();
-      mGLWindow.SetupVideoOrtho();
-      mGLWindow.SetupVideoRasterPosAndZoom();
-      
-      if(!mpMap->IsGood())
-	mpARDriver->Reset();
-      
-      static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
-      static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
-      
-      bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
-      bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
-      
-      mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
-      
-      if(bDrawMap)
-	mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
-      else if(bDrawAR)
-	mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
-
-      //      mGLWindow.GetMousePoseUpdate();
-      string sCaption;
-      if(bDrawMap)
-	sCaption = mpMapViewer->GetMessageForUser();
-      else
-	sCaption = mpTracker->GetMessageForUser();
-      mGLWindow.DrawCaption(sCaption);
-      mGLWindow.DrawMenus();
-      mGLWindow.swap_buffers();
-      mGLWindow.HandlePendingEvents();
+      mpARDriver->Init();
+      bFirstFrame = false;
     }
+
+    mGLWindow.SetupViewport();
+    mGLWindow.SetupVideoOrtho();
+    mGLWindow.SetupVideoRasterPosAndZoom();
+
+    if(!mpMap->IsGood())
+      mpARDriver->Reset();
+
+    static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
+    static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
+
+    bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
+    bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
+
+    mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
+
+    if(bDrawMap)
+      mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
+    else if(bDrawAR)
+      mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
+
+    //      mGLWindow.GetMousePoseUpdate();
+    string sCaption;
+    if(bDrawMap)
+      sCaption = mpMapViewer->GetMessageForUser();
+    else
+      sCaption = mpTracker->GetMessageForUser();
+
+    mGLWindow.DrawCaption(sCaption);
+    mGLWindow.DrawMenus();
+    mGLWindow.swap_buffers();
+    mGLWindow.HandlePendingEvents();
+  }
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
@@ -114,9 +115,31 @@ void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
 }
 
 
+/*!
+ * \brief System::GetCurrentPose.
+ * Get the current camera pose from the tracker state.
+ * Output using a streamlined form, easier to use in Python
+ * \return
+ */
+void System::GetCurrentPose(float *pose) const {
+  SE3<> current_pose = this->mpTracker->GetCurrentPose();
 
+  // Translation is simple, just a vector
+  TooN::Vector<3, float> translation = current_pose.get_translation();
 
+  // Handle the rotation (we get a matrix here)
+  TooN::Matrix <3,3,float> rotation = current_pose.get_rotation().get_matrix();
 
+  // We output the multiplexed values in a single array
+  // TODO
+  for (int i=0; i<3; ++i) {
+    pose[i] = translation[i];
+  }
 
-
-
+  // A bit stupid, fast hack to see if the values are usable
+  for (int i=0; i<3; ++i) {
+    for (int j=0; j<3; ++j) {
+      pose[3 + 3*i + j] = rotation(i,j);
+    }
+  }
+}
