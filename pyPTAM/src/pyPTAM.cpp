@@ -10,6 +10,8 @@
 // Boost / Python bindings
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <vector>
+#include <list>
 
 using namespace std;
 using namespace GVars3;
@@ -43,53 +45,58 @@ void instanciateAndRun()
 
 /*!
  * \brief The pyPTAM struct
- * A structure declaring the PTAM slam,
+ * A structure declaring the PTAM Slam,
  * which we can access from Python.
- * To be completed.
+ * To be completed...
  */
-typedef std::vector<float> pyVecFloat;
 
 struct pyPTAM {
-  public :
-    System s;
-    std::string config_file;
-    bool is_slam_started;
-    float current_pose[9];
+public :
+  System *s;
+  std::string config_file;
+  bool is_slam_started;
+  std::vector<float> current_pose;
 
-    // Create the SLAM and parse the settings
-    pyPTAM(std::string config_file):config_file("settings.cfg") {
-      cout << "  Parsing " <<  config_file << endl;
-      GUI.LoadFile(config_file);
-      GUI.StartParserThread(); // Start parsing of the console input
-      atexit(GUI.StopParserThread);
-      is_slam_started = false;
-    }
+  // Create the SLAM and parse the settings
+  pyPTAM(std::string config_file):config_file("settings.cfg") {
+    cout << "  Parsing " <<  config_file << endl;
+    GUI.LoadFile(config_file);
+    GUI.StartParserThread(); // Start parsing of the console input
+    atexit(GUI.StopParserThread);
 
-    // Start the frame grabbing and computations
-    void Run() {
-      is_slam_started = true;
-      s.Run();
-    }
+    s = new System();
 
-    // Get current pose
-    pyVecFloat GetPose() {
-      pyVecFloat lPose;
+    is_slam_started = false;
+  }
 
-      if (!is_slam_started) {
-        // Return an empty vec
-        lPose.clear();
+  // Start the frame grabbing and computations
+  void Run() {
+    if (!is_slam_started) {
+        is_slam_started = true;
+        s->Run();
       } else {
-        // Update the pose and return it
-        s.GetCurrentPose(current_pose);
+        cout << "PTAM : Already started" << endl;
+      }
+  }
 
-        // Copy it to the Python list structure (a bit clumsy..)
-        for (int i=0; i<9; ++i) {
-          lPose.push_back(current_pose[i]);
-        }
+  // Get current pose
+  boost::python::list GetPose() {
+    boost::python::list new_pose;
+
+    if (is_slam_started) {
+        // Update the pose and return it
+        current_pose.resize(9);
+        s->GetCurrentPose(&current_pose[0]);
+
+        // put all the strings inside the python list
+        vector<float>::iterator it;
+        for (it = current_pose.begin(); it != current_pose.end(); ++it){
+            new_pose.append(*it);
+          }
       }
 
-      return lPose;
-    }
+    return new_pose;
+  }
 };
 
 
@@ -100,9 +107,9 @@ BOOST_PYTHON_MODULE(libpyPTAM)
   // Function which creates the PTAM Slam and start it right away
   def("instanciateAndRun", instanciateAndRun);
 
-
-  class_<pyVecFloat>("pyVecFloat")
-          .def(vector_indexing_suite<pyVecFloat>() );
+  class_<std::vector<float> >("float_vector")
+      .def(vector_indexing_suite<std::vector<float> >())
+      ;
 
   // More potent API : constructor, start the SLAM, get pose values
   class_<pyPTAM>("pyPTAM", init<std::string>())
