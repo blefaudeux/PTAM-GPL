@@ -1,12 +1,14 @@
 cmake_minimum_required (VERSION 2.6) 
-project (AR)
+project (PTAM)
 
 # Get to know where all the dependencies are..
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/libPTAM/dependencies)
 message("Additional lookup directory : ${CMAKE_MODULE_PATH}")
 
 # Try to find the needed packages
-find_package(Boost REQUIRED)
+set(Boost_USE_STATIC_LIBS  OFF)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost COMPONENTS system thread REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(LAPACK REQUIRED)

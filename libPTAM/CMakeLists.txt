@@ -10,6 +10,7 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the included directories
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
@@ -34,7 +35,7 @@ add_library (PTAMd SHARED ${SRC} ${HEADERS})
 add_executable(PTAM ${SRC} ${HEADERS})
 
 # Set the link libraries :
-set(LINK_LIBS  ${BOOST_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES})
+set(LINK_LIBS ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES})
 
 target_link_libraries(PTAMs ${LINK_LIBS})
 target_link_libraries(PTAMd ${LINK_LIBS})

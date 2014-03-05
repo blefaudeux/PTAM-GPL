@@ -56,11 +56,15 @@ System::System()
   mbDone = false;
 };
 
+/*!
+ * \brief System::Run
+ * The loop function, grabbing the frames and updating the system.
+ * Won't return until the SLAM is closed, start in a seperate thread if needed
+ */
 void System::Run()
 {
   while(!mbDone)
   {
-
     // We use two versions of each video frame:
     // One black and white (for processing by the tracker etc)
     // and one RGB, for drawing.
@@ -94,7 +98,7 @@ void System::Run()
     else if(bDrawAR)
       mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
 
-    //      mGLWindow.GetMousePoseUpdate();
+    //  mGLWindow.GetMousePoseUpdate();
     string sCaption;
     if(bDrawMap)
       sCaption = mpMapViewer->GetMessageForUser();
@@ -106,6 +110,18 @@ void System::Run()
     mGLWindow.swap_buffers();
     mGLWindow.HandlePendingEvents();
   }
+}
+
+/*!
+ * \brief System::RunThreaded
+ * Same as Run, but this function returns (starts the SLAM in a background thread)
+ */
+void System::RunBackgroundThread() {
+  // Init the AR rendering
+  mpARDriver->Init();
+
+  // Start the algorithmic thread
+  sys_thread = new boost::thread(boost::bind(&System::Run, this));
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)

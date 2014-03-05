@@ -95,9 +95,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
 
 void ARDriver::MakeFrameBuffer()
 {
-  // Needs nvidia drivers >= 97.46
   cout << "  ARDriver: Creating FBO... ";
-  
   glGenTextures(1, &mnFrameBufferTex);
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB,mnFrameBufferTex);
   glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 
@@ -125,9 +123,11 @@ void ARDriver::MakeFrameBuffer()
 
 static bool CheckFramebufferStatus()         
 {                                            
-  
   GLenum n;                                            
   n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+
+  cout << "GL_FB Status" << n << endl;
+
   if(n == GL_FRAMEBUFFER_COMPLETE_EXT)
     return true; // All good
   

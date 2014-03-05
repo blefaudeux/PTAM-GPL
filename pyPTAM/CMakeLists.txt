@@ -42,7 +42,7 @@ include_directories(${PTAM_INCLUDE_DIR})
 
 message("\nPTAM lib :\n ${PTAM_LIBRARY}\n ${PTAM_INCLUDE_DIR}\n")
 
-find_package(Boost COMPONENTS python)
+find_package(Boost COMPONENTS python thread)
 message("\nBoost lib :\n ${Boost_LIBRARIES}\n")
 
 # Set debug or release configurations

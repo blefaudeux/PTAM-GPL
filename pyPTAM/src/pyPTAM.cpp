@@ -10,6 +10,7 @@
 // Boost / Python bindings
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/thread.hpp>
 #include <vector>
 #include <list>
 
@@ -57,7 +58,7 @@ public :
   bool is_slam_started;
   std::vector<float> current_pose;
 
-  // Create the SLAM and parse the settings
+  // Create the SLAM context, and start the parser thread
   pyPTAM(std::string config_file):config_file("settings.cfg") {
     cout << "  Parsing " <<  config_file << endl;
     GUI.LoadFile(config_file);
@@ -69,10 +70,11 @@ public :
     is_slam_started = false;
   }
 
-  // Start the frame grabbing and computations
+  // Start the frame grabbing and computations on a seperate thread
   void Run() {
     if (!is_slam_started) {
         is_slam_started = true;
+        //s->RunBackgroundThread();
         s->Run();
       } else {
         cout << "PTAM : Already started" << endl;

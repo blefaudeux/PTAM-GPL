@@ -16,6 +16,7 @@
 #include <cvd/image.h>
 #include <cvd/rgb.h>
 #include <cvd/byte.h>
+#include <boost/thread.hpp>
 
 class ATANCamera;
 class Map;
@@ -28,16 +29,18 @@ class System
 {
 public:
   System();
-  void Run();
-
   void GetCurrentPose(float *pose) const;
-  
+  void Run();
+  void RunBackgroundThread();
+
 private:
   VideoSource mVideoSource;
   GLWindow2 mGLWindow;
   CVD::Image<CVD::Rgb<CVD::byte> > mimFrameRGB;
   CVD::Image<CVD::byte> mimFrameBW;
   
+  boost::thread *sys_thread;
+
   Map *mpMap; 
   MapMaker *mpMapMaker; 
   Tracker *mpTracker; 
