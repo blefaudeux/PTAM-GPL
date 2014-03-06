@@ -29,6 +29,7 @@ BLefaudeux :
 ---------------------
 - CMakelist compilation, but TooN, libCVD and GVars3 must be installed beforehand. A lot easier to use and compile on Linux. See E. Rosten Github (https://github.com/edrosten) to get up to date TooN, CVD and GVars3. /!\ install TooN before CVD /!\ 
 
-- Added a basic Python interface (with a dedicated CMakelist, to be built after the original PTAM lib is built and installed), to instanciate a PTAM Slam from within Python
+- Seperate the PTAM lib & calibration routine, and a demo application which instanciates a PTAM Slam.
 
+- Added a basic Python interface, called pyPTAM, to instanciate a PTAM Slam from within Python. Camera attitude computed by PTAM is accessible from within Python, while the slam runs in a seperate thread. (This has a dedicated CMakeLists, must be built after the original PTAM lib is built and installed)
 ---------------------
