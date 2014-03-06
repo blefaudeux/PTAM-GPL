@@ -112,6 +112,8 @@ void System::Run()
       mGLWindow.swap_buffers();
       mGLWindow.HandlePendingEvents();
     }
+
+  cout << "Ending PTAM run" << endl;
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
@@ -121,7 +123,7 @@ void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
 }
 
 // A callable function to stop the computations
-void System::ExternalStop() {
+void System::Stop() {
   this->mbDone = true;
 }
 
@@ -151,4 +153,16 @@ void System::GetCurrentPose(float *pose) const {
           pose[3 + 3*i + j] = rotation(i,j);
         }
     }
+}
+
+int System::GetCurrentKeyframes() {
+ return this->mpMap->vpKeyFrames.size();
+}
+
+int System::GetCurrentPoints() {
+  return this->mpMap->vpPoints.size();
+}
+
+int System::GetDiscardedPoints() {
+  return this->mpMap->vpPointsTrash.size();
 }

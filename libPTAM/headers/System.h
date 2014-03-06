@@ -29,9 +29,12 @@ class System
 {
 public:
   System();
-  void GetCurrentPose(float *pose) const;
-  void Run();
-  void ExternalStop();
+  void  GetCurrentPose(float *pose) const;
+  void  Run();
+  void  Stop();
+  int   GetCurrentKeyframes();
+  int   GetCurrentPoints();
+  int   GetDiscardedPoints();
 
 private:
   VideoSource mVideoSource;

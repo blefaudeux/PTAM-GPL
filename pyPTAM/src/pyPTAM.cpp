@@ -57,7 +57,6 @@ public :
   std::string config_file;
   bool is_slam_started;
   std::vector<float> current_pose;
-
   boost::thread *sys_thread;
 
   // Create the SLAM context, and start the parser thread
@@ -68,7 +67,10 @@ public :
   // Desctructor : stop the brackground thread first !
   inline ~pyPTAM() {
     if (is_slam_started)
-      s->ExternalStop();
+      s->Stop();
+
+    sys_thread->join();
+    delete s;
   }
 
   void ConstructAndWrap() {
@@ -98,29 +100,47 @@ public :
       }
   }
 
-  // Get current pose
-  boost::python::list GetPose() {
-    boost::python::list new_pose;
+  /*!
+   * \brief GetPose
+   * \param Python list to output the values
+   */
+  void GetPose(boost::python::list current_pose_py) {
 
+    // Update the pose and return it
     if (is_slam_started) {
-        // Update the pose and return it
         current_pose.resize(9);
         s->GetCurrentPose(&current_pose[0]);
-
-
       } else {
-        // Basically return 0s
         current_pose.resize(9);
         memset(&current_pose[0], 0, 9 * sizeof(float));
       }
 
-    // Put all the strings inside the python list
+    // Put all the floats inside the python list
     vector<float>::iterator it;
     for (it = current_pose.begin(); it != current_pose.end(); ++it){
-        new_pose.append(*it);
+        current_pose_py.append(*it);
       }
+  }
 
-    return new_pose;
+  int GetCurrentKeyframes() {
+    if (is_slam_started)
+      return s->GetCurrentKeyframes();
+    else
+      return 0;
+  }
+
+  int GetCurrentPoints() {
+    if (is_slam_started)
+      return s->GetCurrentPoints();
+    else
+      return 0;
+  }
+
+  int GetDiscardedPoints() {
+    if (is_slam_started)
+      return s->GetDiscardedPoints();
+    else
+      return 0;
   }
 };
 
@@ -136,9 +156,12 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def(vector_indexing_suite<std::vector<float> >())
       ;
 
-  // More potent API : constructor, start the SLAM, get pose values
+  // Declare the Python API : constructor, start the SLAM, get pose values, etc..
   class_<pyPTAM>("pyPTAM", init<std::string>())
       .def("Start",     &pyPTAM::Start)
       .def("GetPose", &pyPTAM::GetPose)
+      .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
+      .def("GetCurrentPoints", &pyPTAM::GetCurrentPoints)
+      .def("GetDiscardedPoints", &pyPTAM::GetDiscardedPoints)
       ;
 }
