@@ -31,7 +31,7 @@ public:
   System();
   void GetCurrentPose(float *pose) const;
   void Run();
-  void RunBackgroundThread();
+  void ExternalStop();
 
 private:
   VideoSource mVideoSource;
@@ -49,6 +49,7 @@ private:
   MapViewer *mpMapViewer;
   
   bool mbDone;
+  bool ARDriver_initialized;
 
   static void GUICommandCallBack(void* ptr, std::string sCommand, std::string sParams);
 };

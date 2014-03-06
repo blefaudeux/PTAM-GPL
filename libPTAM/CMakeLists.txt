@@ -1,5 +1,5 @@
 # Define the project's name
-project(PTAM)
+project(libPTAM)
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -32,14 +32,12 @@ endif()
 # Create static and dynamic libraries
 add_library (PTAMs STATIC ${SRC} ${HEADERS})
 add_library (PTAMd SHARED ${SRC} ${HEADERS})
-add_executable(PTAM ${SRC} ${HEADERS})
 
 # Set the link libraries :
 set(LINK_LIBS ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES})
 
 target_link_libraries(PTAMs ${LINK_LIBS})
 target_link_libraries(PTAMd ${LINK_LIBS})
-target_link_libraries(PTAM ${LINK_LIBS})
 
 ### Define the installation procedure
 install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)

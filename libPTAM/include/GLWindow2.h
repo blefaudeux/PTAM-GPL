@@ -48,9 +48,9 @@ protected:
   // User interface menus:
   std::vector<GLWindowMenu*> mvpGLWindowMenus;
 
-  CVD::ImageRef mirVideoSize;   // The size of the source video material.
+  // The size of the source video material.
+  CVD::ImageRef mirVideoSize;
   
-
   // Event handling routines:
   virtual void on_key_down(GLWindow&, int key);
   virtual void on_mouse_move(GLWindow& win, CVD::ImageRef where, int state);
@@ -61,8 +61,6 @@ protected:
   // Storage for map viewer updates:
   TooN::Vector<6> mvMCPoseUpdate;
   TooN::Vector<6> mvLeftPoseUpdate;
-  
-
 };
 
 

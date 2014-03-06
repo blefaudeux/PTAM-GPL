@@ -31,18 +31,16 @@ System::System()
   Vector<2> v2;
   if(v2==v2) ;
   if(vTest == ATANCamera::mvDefaultParams)
-  {
-    cout << endl;
-    cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
-    cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
-    exit(1);
-  }
+    {
+      cout << endl;
+      cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
+      cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
+      exit(1);
+    }
   
   mpMap = new Map;
   mpMapMaker = new MapMaker(*mpMap, *mpCamera);
   mpTracker = new Tracker(mVideoSource.Size(), *mpCamera, *mpMap, *mpMapMaker);
-  mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow);
-  mpMapViewer = new MapViewer(*mpMap, mGLWindow);
   
   GUI.ParseLine("GLWindow.AddMenu Menu Menu");
   GUI.ParseLine("Menu.ShowMenu Root");
@@ -54,6 +52,7 @@ System::System()
   GUI.ParseLine("Menu.AddMenuToggle Root \"Draw AR\" DrawAR Root");
   
   mbDone = false;
+  ARDriver_initialized = false;
 };
 
 /*!
@@ -63,65 +62,56 @@ System::System()
  */
 void System::Run()
 {
-  while(!mbDone)
-  {
-    // We use two versions of each video frame:
-    // One black and white (for processing by the tracker etc)
-    // and one RGB, for drawing.
-
-    // Grab new video frame...
-    mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);
-    static bool bFirstFrame = true;
-    if(bFirstFrame)
-    {
+  if (!ARDriver_initialized) {
+      // Initialize all the graphics here, so that it can be moved to a
+      // seperate thread
+      mpMapViewer = new MapViewer(*mpMap, mGLWindow);
+      mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow);
       mpARDriver->Init();
-      bFirstFrame = false;
+      ARDriver_initialized = true;
     }
 
-    mGLWindow.SetupViewport();
-    mGLWindow.SetupVideoOrtho();
-    mGLWindow.SetupVideoRasterPosAndZoom();
+  while(!mbDone)
+    {
+      // We use two versions of each video frame:
+      // One black and white (for processing by the tracker etc)
+      // and one RGB, for drawing.
 
-    if(!mpMap->IsGood())
-      mpARDriver->Reset();
+      // Grab new video frame...
+      mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);
 
-    static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
-    static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
+      mGLWindow.SetupViewport();
+      mGLWindow.SetupVideoOrtho();
+      mGLWindow.SetupVideoRasterPosAndZoom();
 
-    bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
-    bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
+      if(!mpMap->IsGood())
+        mpARDriver->Reset();
 
-    mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
+      static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
+      static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
 
-    if(bDrawMap)
-      mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
-    else if(bDrawAR)
-      mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
+      bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
+      bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
 
-    //  mGLWindow.GetMousePoseUpdate();
-    string sCaption;
-    if(bDrawMap)
-      sCaption = mpMapViewer->GetMessageForUser();
-    else
-      sCaption = mpTracker->GetMessageForUser();
+      mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
 
-    mGLWindow.DrawCaption(sCaption);
-    mGLWindow.DrawMenus();
-    mGLWindow.swap_buffers();
-    mGLWindow.HandlePendingEvents();
-  }
-}
+      if(bDrawMap)
+        mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
+      else if(bDrawAR)
+        mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
 
-/*!
- * \brief System::RunThreaded
- * Same as Run, but this function returns (starts the SLAM in a background thread)
- */
-void System::RunBackgroundThread() {
-  // Init the AR rendering
-  mpARDriver->Init();
+      //  mGLWindow.GetMousePoseUpdate();
+      string sCaption;
+      if(bDrawMap)
+        sCaption = mpMapViewer->GetMessageForUser();
+      else
+        sCaption = mpTracker->GetMessageForUser();
 
-  // Start the algorithmic thread
-  sys_thread = new boost::thread(boost::bind(&System::Run, this));
+      mGLWindow.DrawCaption(sCaption);
+      mGLWindow.DrawMenus();
+      mGLWindow.swap_buffers();
+      mGLWindow.HandlePendingEvents();
+    }
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
@@ -130,6 +120,10 @@ void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
     static_cast<System*>(ptr)->mbDone = true;
 }
 
+// A callable function to stop the computations
+void System::ExternalStop() {
+  this->mbDone = true;
+}
 
 /*!
  * \brief System::GetCurrentPose.
@@ -147,15 +141,14 @@ void System::GetCurrentPose(float *pose) const {
   TooN::Matrix <3,3,float> rotation = current_pose.get_rotation().get_matrix();
 
   // We output the multiplexed values in a single array
-  // TODO
   for (int i=0; i<3; ++i) {
-    pose[i] = translation[i];
-  }
+      pose[i] = translation[i];
+    }
 
   // A bit stupid, fast hack to see if the values are usable
   for (int i=0; i<3; ++i) {
-    for (int j=0; j<3; ++j) {
-      pose[3 + 3*i + j] = rotation(i,j);
+      for (int j=0; j<3; ++j) {
+          pose[3 + 3*i + j] = rotation(i,j);
+        }
     }
-  }
 }
