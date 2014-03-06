@@ -29,7 +29,7 @@ class System
 {
 public:
   System();
-  void  GetCurrentPose(float *pose) const;
+  void  GetCurrentPose(double *pose) const;
   void  Run();
   void  Stop();
   int   GetCurrentKeyframes();

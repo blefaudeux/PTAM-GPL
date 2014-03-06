@@ -14,8 +14,8 @@ i_pict = 0
 
 new_pose = []
 while keep_going:
-    # newSlam.GetPose(new_pose)
-    # print('Pose {} : {:.2} {:.2} {:.2}'.format(i_pict, new_pose[0], new_pose[1], new_pose[2]))
+    new_pose = newSlam.GetPose()
+    print('Pose {} : {:.2} {:.2} {:.2}'.format(i_pict, new_pose[0], new_pose[1], new_pose[2]))
     
     n_points = newSlam.GetCurrentPoints()
     print("Current points in the map : {}".format(n_points))
@@ -24,6 +24,7 @@ while keep_going:
     i_pict += 1
     keep_going = (i_pict < 20)
 
+del new_pose
 print ('Ending the computations')
 
 

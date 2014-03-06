@@ -18,46 +18,18 @@ using namespace std;
 using namespace GVars3;
 
 /*!
- * \brief instanciateAndRun
- * A 'do it all' function, test the c++/python bindings
- */
-void instanciateAndRun()
-{
-  cout << " Starting the PTAM Slam straightaway" << endl;
-  cout << "  Parsing settings.cfg ...." << endl;
-
-  GUI.LoadFile("settings.cfg");
-  GUI.StartParserThread(); // Start parsing of the console input
-  atexit(GUI.StopParserThread);
-
-  try
-  {
-    System s;
-    s.Run();
-  }
-  catch(CVD::Exceptions::All e)
-  {
-    cout << endl;
-    cout << "!! Failed to run system; got exception. " << endl;
-    cout << "   Exception was: " << endl;
-    cout << e.what << endl;
-  }
-}
-
-/*!
  * \brief The pyPTAM struct
  * A structure declaring the PTAM Slam,
  * which we can access from Python.
  * To be completed...
  */
-
 struct pyPTAM {
 public :
   System *s;
-  std::string config_file;
   bool is_slam_started;
-  std::vector<float> current_pose;
+  std::string config_file;
   boost::thread *sys_thread;
+  std::vector <double> new_pose;
 
   // Create the SLAM context, and start the parser thread
   pyPTAM(std::string config_file):config_file("settings.cfg") {
@@ -66,11 +38,13 @@ public :
 
   // Desctructor : stop the brackground thread first !
   inline ~pyPTAM() {
-    if (is_slam_started)
+    if (is_slam_started) {
       s->Stop();
+      is_slam_started = false;
+      }
 
     sys_thread->join();
-    delete s;
+    cout << "PTAM thread returned" << endl;
   }
 
   void ConstructAndWrap() {
@@ -104,22 +78,17 @@ public :
    * \brief GetPose
    * \param Python list to output the values
    */
-  void GetPose(boost::python::list current_pose_py) {
-
+  std::vector<double> GetPose() {
     // Update the pose and return it
     if (is_slam_started) {
-        current_pose.resize(9);
-        s->GetCurrentPose(&current_pose[0]);
+        new_pose.resize(12);
+        s->GetCurrentPose(&new_pose[0]);
       } else {
-        current_pose.resize(9);
-        memset(&current_pose[0], 0, 9 * sizeof(float));
+        new_pose.resize(12);
+        memset(&new_pose[0], 0, 12 * sizeof(double));
       }
 
-    // Put all the floats inside the python list
-    vector<float>::iterator it;
-    for (it = current_pose.begin(); it != current_pose.end(); ++it){
-        current_pose_py.append(*it);
-      }
+    return this->new_pose;
   }
 
   int GetCurrentKeyframes() {
@@ -149,19 +118,16 @@ BOOST_PYTHON_MODULE(libpyPTAM)
 {
   using namespace boost::python;
 
-  // Function which creates the PTAM Slam and start it right away
-  def("instanciateAndRun", instanciateAndRun);
-
-  class_<std::vector<float> >("float_vector")
-      .def(vector_indexing_suite<std::vector<float> >())
+  class_<std::vector<double> >("double_vector")
+      .def(vector_indexing_suite<std::vector<double> >())
       ;
 
   // Declare the Python API : constructor, start the SLAM, get pose values, etc..
   class_<pyPTAM>("pyPTAM", init<std::string>())
-      .def("Start",     &pyPTAM::Start)
-      .def("GetPose", &pyPTAM::GetPose)
+      .def("Start",               &pyPTAM::Start)
+      .def("GetPose",             &pyPTAM::GetPose)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
-      .def("GetCurrentPoints", &pyPTAM::GetCurrentPoints)
-      .def("GetDiscardedPoints", &pyPTAM::GetDiscardedPoints)
+      .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
+      .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
       ;
 }

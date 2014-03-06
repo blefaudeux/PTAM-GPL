@@ -133,14 +133,14 @@ void System::Stop() {
  * Output using a streamlined form, easier to use in Python
  * \return
  */
-void System::GetCurrentPose(float *pose) const {
+void System::GetCurrentPose(double *pose) const {
   SE3<> current_pose = this->mpTracker->GetCurrentPose();
 
   // Translation is simple, just a vector
-  TooN::Vector<3, float> translation = current_pose.get_translation();
+  TooN::Vector<3, double> translation = current_pose.get_translation();
 
   // Handle the rotation (we get a matrix here)
-  TooN::Matrix <3,3,float> rotation = current_pose.get_rotation().get_matrix();
+  TooN::Matrix <3,3,double> rotation = current_pose.get_rotation().get_matrix();
 
   // We output the multiplexed values in a single array
   for (int i=0; i<3; ++i) {
