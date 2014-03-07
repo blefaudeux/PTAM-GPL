@@ -41,7 +41,7 @@ public :
     if (is_slam_started) {
       s->Stop();
       is_slam_started = false;
-      }
+    }
 
     sys_thread->join();
     cout << "PTAM thread returned" << endl;
@@ -65,13 +65,13 @@ public :
   // Start the frame grabbing and computations on a seperate thread
   void Start() {
     if (!is_slam_started) {
-        // Start the thread, OpenGL context will be allocated within
-        sys_thread = new boost::thread(boost::bind(&pyPTAM::ConstructAndWrap, this));
+      // Start the thread, OpenGL context will be allocated within
+      sys_thread = new boost::thread(boost::bind(&pyPTAM::ConstructAndWrap, this));
 
-        cout << "PTAM : Thread started" << endl;
-      } else {
-        cout << "PTAM : Already started" << endl;
-      }
+      cout << "PTAM: Thread started" << endl;
+    } else {
+      cout << "PTAM: Already started" << endl;
+    }
   }
 
   /*!
@@ -81,16 +81,21 @@ public :
   std::vector<double> GetPose() {
     // Update the pose and return it
     if (is_slam_started) {
-        new_pose.resize(12);
-        s->GetCurrentPose(&new_pose[0]);
-      } else {
-        new_pose.resize(12);
-        memset(&new_pose[0], 0, 12 * sizeof(double));
-      }
+      new_pose.resize(12);
+      s->GetCurrentPose(&new_pose[0]);
+    } else {
+      new_pose.resize(12);
+      memset(&new_pose[0], 0, 12 * sizeof(double));
+    }
 
     return this->new_pose;
   }
 
+  /*!
+   * \brief GetCurrentKeyframes
+   * \return the current number of
+   * keyframes stored in the map
+   */
   int GetCurrentKeyframes() {
     if (is_slam_started)
       return s->GetCurrentKeyframes();
@@ -98,6 +103,10 @@ public :
       return 0;
   }
 
+  /*!
+   * \brief GetCurrentPoints:
+   * \return the current number of points positionned
+   */
   int GetCurrentPoints() {
     if (is_slam_started)
       return s->GetCurrentPoints();
@@ -105,12 +114,23 @@ public :
       return 0;
   }
 
+  /*!
+   * \brief GetDiscardedPoints
+   * \return the current number of discarded points
+   */
   int GetDiscardedPoints() {
     if (is_slam_started)
       return s->GetDiscardedPoints();
     else
       return 0;
   }
+
+//  void MapReset() {
+//    if (is_slam_started) {
+//      s->mpMap.Reset();
+//      cout << "PTAM: Map reset" << endl;
+//    }
+//  }
 };
 
 
@@ -129,5 +149,6 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
+//      .def("MapReset",            &pyPTAM::MapReset)
       ;
 }
