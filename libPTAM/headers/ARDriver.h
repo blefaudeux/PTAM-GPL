@@ -28,7 +28,7 @@ class ARDriver
  public:
   ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw);
   void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld);
-  void LoadARModel(std::string &model_file);
+  void LoadARModel(std::string model_file);
   void Reset();
   void Init();
 

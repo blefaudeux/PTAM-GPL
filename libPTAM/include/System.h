@@ -35,7 +35,7 @@ public:
   int   GetCurrentKeyframes();
   int   GetCurrentPoints();
   int   GetDiscardedPoints();
-  bool  LoadARModel(std::string &model_file);
+  bool  LoadARModel(std::string model_file);
 
 private:
   VideoSource mVideoSource;
@@ -44,7 +44,6 @@ private:
   CVD::Image<CVD::byte> mimFrameBW;
   
   boost::thread *sys_thread;
-
   Map *mpMap; 
   MapMaker *mpMapMaker; 
   Tracker *mpTracker; 
@@ -54,6 +53,8 @@ private:
   
   bool mbDone;
   bool ARDriver_initialized;
+  bool ARDriver_load_pending;
+  std::string AR_assets_filename;
 
   static void GUICommandCallBack(void* ptr, std::string sCommand, std::string sParams);
 };

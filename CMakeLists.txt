@@ -15,6 +15,8 @@ find_package(LAPACK REQUIRED)
 find_package(CVD REQUIRED)
 find_package(GVars3 REQUIRED)
 find_package(TooN REQUIRED)
+find_package(Assimp REQUIRED)
+find_package(DevIL REQUIRED)
 
 message("\nGVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
 message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")

@@ -53,10 +53,19 @@ System::System()
   
   mbDone = false;
   ARDriver_initialized = false;
-};
+  ARDriver_load_pending = false;
+}
 
-bool System::LoadARModel(std::string &model_file) {
-  this->mpARDriver->LoadARModel(model_file);
+bool System::LoadARModel(std::string model_file) {
+  if (ARDriver_initialized) {
+      cout << "System : load AR model" << endl;
+      this->mpARDriver->LoadARModel(model_file);
+      cout << "Done" << endl;
+    } else {
+      cout << "System : AR not allocated yet, deferred loading" << endl;
+      AR_assets_filename = model_file;
+      ARDriver_load_pending = true;
+    }
 }
 
 /*!
@@ -72,6 +81,11 @@ void System::Run()
       mpMapViewer = new MapViewer(*mpMap, mGLWindow);
       mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow);
       mpARDriver->Init();
+
+      if (ARDriver_load_pending) {
+          this->mpARDriver->LoadARModel(AR_assets_filename);
+        }
+
       ARDriver_initialized = true;
     }
 
@@ -160,7 +174,7 @@ void System::GetCurrentPose(double *pose) const {
 }
 
 int System::GetCurrentKeyframes() {
- return this->mpMap->vpKeyFrames.size();
+  return this->mpMap->vpKeyFrames.size();
 }
 
 int System::GetCurrentPoints() {

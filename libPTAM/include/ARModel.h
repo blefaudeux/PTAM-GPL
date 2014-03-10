@@ -13,7 +13,7 @@
 #include <cvd/convolution.h>
 
 // Load assets using ASSIMP
-#include <assimp/cimport.h>
+#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
@@ -23,7 +23,6 @@ class ARModel
 {
 public:
   ARModel();
-  ~ARModel();
   void draw(Vector<3> v3CamPos);
   bool loadModelFromFile(std::string model_file);
   void Reset();
@@ -33,6 +32,7 @@ public:
 private:
   double mdModelRadius;
   const aiScene* scene;
+  Assimp::Importer importer;
   bool mbInitialised;
   SE3<> worldFromModel;
   std::string model_file;

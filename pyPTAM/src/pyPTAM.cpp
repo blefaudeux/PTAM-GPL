@@ -30,9 +30,11 @@ public :
   std::string config_file;
   boost::thread *sys_thread;
   std::vector <double> new_pose;
+  std::string AR_assets_file;
 
   // Create the SLAM context, and start the parser thread
   pyPTAM(std::string config_file):config_file("settings.cfg") {
+    s = NULL;
     is_slam_started = false;
   }
 
@@ -56,6 +58,11 @@ public :
 
     // Build the new context
     s = new System();
+
+    // Load the assets if needed
+    if (!AR_assets_file.empty()) {
+        s->LoadARModel(AR_assets_file);
+      }
 
     // Start the computations
     is_slam_started = true;
@@ -120,8 +127,15 @@ public :
 //    }
 //  }
 
-  void LoadARModel(std::string &model_file) {
-    s->LoadARModel(model_file);
+  void LoadARModel(std::string model_file) {
+    if (NULL == s) {
+        cout << "Deferred AR assets loading " << endl;
+        AR_assets_file = model_file;
+      } else {
+        cout << "Loading AR Model" << endl;
+        s->LoadARModel(model_file);
+        cout << "Model loaded" << endl;
+      }
   }
 
   // Start the frame grabbing and computations on a seperate thread
@@ -156,6 +170,5 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
       .def("LoadARModel",         &pyPTAM::LoadARModel)
-//      .def("MapReset",            &pyPTAM::MapReset)
       ;
 }
