@@ -7,9 +7,6 @@
 
 #include "ARModel.h"
 
-// Try to use the renderer from Lighthouse3D
-#include "l3classimport.cc"
-
 #include "stdio.h"
 #include "fstream"
 
@@ -42,8 +39,9 @@ bool ARModel::loadModelFromFile(std::string model_file) {
 
   if (scene) {
     // Normalize the assets scale
-      AssimpRenderer.get_bounding_box(&scene_min, &scene_max);
-      // TODO
+    //AssimpRenderer.get_bounding_box(&scene_min, &scene_max);
+    // TODO
+
     scene_center.x = (scene_min.x + scene_max.x) / 2.0f;
     scene_center.y = (scene_min.y + scene_max.y) / 2.0f;
     scene_center.z = (scene_min.z + scene_max.z) / 2.0f;

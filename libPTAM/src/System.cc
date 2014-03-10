@@ -1,6 +1,5 @@
 // Copyright 2008 Isis Innovation Limited
 #include "System.h"
-#include "OpenGL.h"
 #include <gvars3/instances.h>
 #include <stdlib.h>
 #include "ATANCamera.h"

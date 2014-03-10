@@ -6,16 +6,14 @@
  * PTAM AR extension to load different OpenGL models as needed.
  */
 
+// Try to use the renderer from Lighthouse3D
+#include "AssimpRenderer.h"
+
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
 #include <stdlib.h>
-#include "OpenGL.h"
 #include <cvd/convolution.h>
-
-// Load assets using ASSIMP
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <OpenGL.h>
 
 using namespace TooN;
 

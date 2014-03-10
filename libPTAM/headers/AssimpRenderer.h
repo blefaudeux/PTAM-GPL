@@ -31,16 +31,14 @@
 
 // Have Fun :-)
 
+#ifndef ASSIMP_RENDERER
+#define ASSIMP_RENDERER
+
 #ifdef _WIN32
 #pragma comment(lib,"assimp.lib")
 #pragma comment(lib,"devil.lib")
 #pragma comment(lib,"glew32.lib")
-
 #endif
-
-
-// include DevIL for image loading
-#include <IL/il.h>
 
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
@@ -48,11 +46,14 @@
 // GLUT is the toolkit to interface with the OS
 #include <GL/freeglut.h>
 
+// include DevIL for image loading
+#include <IL/il.h>
+
 // auxiliary C file to read the shader text files
 #include "Textfile.h"
 
 // assimp include files. These three are usually needed.
-#include "assimp/Importer.hpp"	//OO version Header!
+#include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 
@@ -70,209 +71,198 @@
 
 #define printOpenGLError() printOglError(__FILE__, __LINE__)
 
+#define aisgl_min(x,y) (x<y?x:y)
+#define aisgl_max(x,y) (y>x?y:x)
+#ifndef M_PI
+#define M_PI  3.14159265358979323846f
+#endif
+
 // Information to render each assimp node
 struct MyMesh{
-
-	GLuint vao;
-	GLuint texIndex;
-	GLuint uniformBlockIndex;
-	int numFaces;
+  GLuint vao;
+  GLuint texIndex;
+  GLuint uniformBlockIndex;
+  int numFaces;
 };
 
 std::vector<struct MyMesh> myMeshes;
 
 // This is for a shader uniform block
 struct MyMaterial{
-
-	float diffuse[4];
-	float ambient[4];
-	float specular[4];
-	float emissive[4];
-	float shininess;
-	int texCount;
+  float diffuse[4];
+  float ambient[4];
+  float specular[4];
+  float emissive[4];
+  float shininess;
+  int texCount;
 };
 
 class AssimpRenderer {
-	// Model Matrix (part of the OpenGL Model View Matrix)
-	float modelMatrix[16];
+public :
+  AssimpRenderer();
 
-	// For push and pop matrix
-	std::vector<float *> matrixStack;
+  // Support functions :
+  static int  printOglError(char *file, int line);
+  static void crossProduct( float *a, float *b, float *res);
+  static void normalize(float *a);
 
-	// Vertex Attribute Locations
-	GLuint vertexLoc=0, normalLoc=1, texCoordLoc=2;
+  // sets the square matrix mat to the identity matrix,
+  // size refers to the number of rows (or columns)
+  static void setIdentityMatrix( float *mat, int size);
+  static void multMatrix(float *a, float *b);
 
-	// Uniform Bindings Points
-	GLuint matricesUniLoc = 1, materialUniLoc = 2;
+  // Defines a transformation matrix mat with a translation
+  static void setTranslationMatrix(float *mat,
+                                   float x,
+                                   float y,
+                                   float z);
 
-	// The sampler uniform for textured models
-	// we are assuming a single texture so this will
-	//always be texture unit 0
-	GLuint texUnit = 0;
+  // Defines a transformation matrix mat with a scale
+  static void setScaleMatrix(float *mat,
+                             float sx,
+                             float sy,
+                             float sz);
 
-	// Uniform Buffer for Matrices
-	// this buffer will contain 3 matrices: projection, view and model
-	// each matrix is a float array with 16 components
-	GLuint matricesUniBuffer;
+  // Defines a transformation matrix mat with a rotation
+  // angle alpha and a rotation axis (x,y,z)
+  static void setRotationMatrix(float *mat,
+                                float angle,
+                                float x,
+                                float y,
+                                float z);
 
-	// Program and Shader Identifiers
-	GLuint program, vertexShader, fragmentShader;
+  static void set_float4(float f[4], float a, float b, float c, float d);
 
-	// Shader Names
-	char *vertexFileName = "dirlightdiffambpix.vert";
-	char *fragmentFileName = "dirlightdiffambpix.frag";
-
-	// Create an instance of the Importer class
-	Assimp::Importer importer;
-
-	// the global Assimp scene object
-	const aiScene* scene = NULL;
-
-	// scale factor for the model to fit in the window
-	float scaleFactor;
-
-
-	// images / texture
-	// map image filenames to textureIds
-	// pointer to texture Array
-	std::map<std::string, GLuint> textureIdMap;
-
-	// Replace the model name by your model's filename
-	static const std::string modelname = "bench.obj";
+  static void color4_to_float4(const aiColor4D *c, float f[4]);
 
 
-	// Camera Position
-	float camX = 0, camY = 0, camZ = 5;
+  static inline float
+  DegToRad(float degrees)
+  {
+    return (float)(degrees * (M_PI / 180.0f));
+  };
 
-	// Mouse Tracking Variables
-	int startX, startY, tracking = 0;
+private:
+  // Model Matrix (part of the OpenGL Model View Matrix)
+  float modelMatrix[16];
 
-	// Camera Spherical Coordinates
-	float alpha = 0.0f, beta = 0.0f;
-	float r = 5.0f;
+  // For push and pop matrix
+  std::vector<float *> matrixStack;
 
-#define M_PI       3.14159265358979323846f
+  // Vertex Attribute Locations
+  GLuint vertexLoc, normalLoc, texCoordLoc;
 
-	static inline float
-	DegToRad(float degrees)
-	{
-		return (float)(degrees * (M_PI / 180.0f));
-	};
+  // Uniform Bindings Points
+  GLuint matricesUniLoc, materialUniLoc;
 
-	// Frame counting and FPS computation
-	long time,timebase = 0,frame = 0;
-	char s[32];
+  // The sampler uniform for textured models
+  // we are assuming a single texture so this will
+  //always be texture unit 0
+  GLuint texUnit;
 
-	//-----------------------------------------------------------------
-	// Support functions :
-	static int printOglError(char *file, int line);
-	static void crossProduct( float *a, float *b, float *res);
-	static void normalize(float *a);
+  // Uniform Buffer for Matrices
+  // this buffer will contain 3 matrices: projection, view and model
+  // each matrix is a float array with 16 components
+  GLuint matricesUniBuffer;
 
-	// ----------------------------------------------------
-	// MATRIX STUFF
-	//
+  // Program and Shader Identifiers
+  GLuint program, vertexShader, fragmentShader;
 
-	// Push and Pop for modelMatrix
-	void pushMatrix();
-	void popMatrix();
+  // Shader Names
+  char *vertexFileName;
+  char *fragmentFileName;
 
-	// sets the square matrix mat to the identity matrix,
-	// size refers to the number of rows (or columns)
-	static void setIdentityMatrix( float *mat, int size);
-	static void multMatrix(float *a, float *b);
+  // Create an instance of the Importer class
+  Assimp::Importer importer;
 
-	// Defines a transformation matrix mat with a translation
-	static void setTranslationMatrix(float *mat,
-																	 float x,
-																	 float y,
-																	 float z);
+  // the global Assimp scene object
+  const aiScene* scene;
 
-	// Defines a transformation matrix mat with a scale
-	static void setScaleMatrix(float *mat, float sx, float sy, float sz);
+  // scale factor for the model to fit in the window
+  float scaleFactor;
 
-	// Defines a transformation matrix mat with a rotation
-	// angle alpha and a rotation axis (x,y,z)
-	static void setRotationMatrix(float *mat,
-																float angle,
-																float x,
-																float y,
-																float z);
+  // images / texture
+  // map image filenames to textureIds
+  // pointer to texture Array
+  std::map<std::string, GLuint> textureIdMap;
 
-	// ----------------------------------------------------
-	// Model Matrix
-	//
-	// Copies the modelMatrix to the uniform buffer
-	void setModelMatrix();
+  // Replace the model name by your model's filename
+  static const std::string modelname;
 
-	// The equivalent to glTranslate applied to the model matrix
-	void translate(float x, float y, float z);
+  // Camera Position
+  float camX, camY, camZ;
 
-	// The equivalent to glRotate applied to the model matrix
-	void rotate(float angle, float x, float y, float z);
+  // Camera Spherical Coordinates
+  float alpha, beta, r;
 
-	// The equivalent to glScale applied to the model matrix
-	void scale(float x, float y, float z);
+  void get_bounding_box_for_node (const aiNode* nd,
+                                  aiVector3D* min,
+                                  aiVector3D* max);
 
-	// ----------------------------------------------------
-	// Projection Matrix
-	//
-	// Computes the projection Matrix and stores it in the uniform buffer
-	void buildProjectionMatrix(float fov,
-														 float ratio,
-														 float nearp,
-														 float farp);
+  void get_bounding_box (aiVector3D* min, aiVector3D* max);
 
-	// ----------------------------------------------------
-	// View Matrix
-	//
-	// Computes the viewMatrix and stores it in the uniform buffer
-	//
-	// note: it assumes the camera is not tilted,
-	// i.e. a vertical up vector along the Y axis (remember gluLookAt?)
-	//
-	void setCamera(float posX, float posY, float posZ,
-								 float lookAtX, float lookAtY, float lookAtZ);
-	// ----------------------------------------------------------------------------
+  // Frame counting and FPS computation
+  long time,timebase,frame;
+  char s[32];
 
-#define aisgl_min(x,y) (x<y?x:y)
-#define aisgl_max(x,y) (y>x?y:x)
+  // MATRIX STUFF
+  // Push and Pop for modelMatrix
+  void pushMatrix();
+  void popMatrix();
 
-	static void get_bounding_box_for_node (const aiNode* nd,
-																				 aiVector3D* min,
-																				 aiVector3D* max);
+  // Model Matrix
+  // Copies the modelMatrix to the uniform buffer
+  void setModelMatrix();
 
-	static void get_bounding_box (aiVector3D* min, aiVector3D* max);
+  // The equivalent to glTranslate applied to the model matrix
+  void translate(float x, float y, float z);
 
-	static void set_float4(float f[4], float a, float b, float c, float d);
+  // The equivalent to glRotate applied to the model matrix
+  void rotate(float angle, float x, float y, float z);
 
-	static void color4_to_float4(const aiColor4D *c, float f[4]);
+  // The equivalent to glScale applied to the model matrix
+  void scale(float x, float y, float z);
 
-	bool Import3DFromFile( const std::string& pFile);
+  // Projection Matrix
+  // Computes the projection Matrix and stores it in the uniform buffer
+  void buildProjectionMatrix(float fov,
+                             float ratio,
+                             float nearp,
+                             float farp);
 
-	int LoadGLTextures(const aiScene* scene);
+  // View Matrix
+  // Computes the viewMatrix and stores it in the uniform buffer
+  // note: it assumes the camera is not tilted,
+  // i.e. a vertical up vector along the Y axis (remember gluLookAt?)
+  void  setCamera(float posX, float posY, float posZ,
+                  float lookAtX, float lookAtY, float lookAtZ);
 
-	void genVAOsAndUniformBuffer(const aiScene *sc);
+  void  processKeys(unsigned char key, int xx, int yy);
 
+  GLuint setupShaders();
 
-	// ------------------------------------------------------------
-	//
-	// Reshape Callback Function
-	//
-	void changeSize(int w, int h);
+  int   init();
 
+  bool  Import3DFromFile( const std::string& pFile);
 
-	// ------------------------------------------------------------
-	//
-	// Render stuff
-	//
+  int   LoadGLTextures(const aiScene* scene);
 
-	// Render Assimp Model
-	void recursive_render (const aiScene *sc, const aiNode* nd);
+  void  genVAOsAndUniformBuffer(const aiScene *sc);
 
-	// Rendering Callback Function
-	void renderScene(void);
+  void  printShaderInfoLog(GLuint obj);
+  void  printProgramInfoLog(GLuint obj);
 
+  // Reshape Callback Function
+  void changeSize(int w, int h);
 
+  // ------------------------------------------------------------
+  // Render stuff
+  // - render Assimp Model
+  void recursive_render (const aiScene *sc, const aiNode* nd);
+
+  // - rendering Callback Function
+  void renderScene(void);
 };
+
+#endif
 
