@@ -18,6 +18,7 @@
 #include <cvd/rgb.h>
 #include <cvd/byte.h>
 #include "EyeGame.h"
+#include "ARModel.h"
 
 using namespace std;
 using namespace CVD;
@@ -27,11 +28,14 @@ class ARDriver
  public:
   ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw);
   void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld);
+  void LoadARModel(std::string &model_file);
   void Reset();
   void Init();
+
  protected:
   ATANCamera mCamera;
   GLWindow2 &mGLWindow;
+
   void DrawFadingGrid();
   void MakeFrameBuffer();
   void DrawFBBackGround();
@@ -48,8 +52,10 @@ class ARDriver
   ImageRef mirFrameSize;
   SE3<> mse3;
   bool mbInitialised;
+  bool assetsLoaded;
 
   // Eyeballs:
   EyeGame mGame;
+  ARModel *assetModel;
 };
 #endif

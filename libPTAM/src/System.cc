@@ -55,6 +55,10 @@ System::System()
   ARDriver_initialized = false;
 };
 
+bool System::LoadARModel(std::string &model_file) {
+  this->mpARDriver->LoadARModel(model_file);
+}
+
 /*!
  * \brief System::Run
  * The loop function, grabbing the frames and updating the system.

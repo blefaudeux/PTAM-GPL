@@ -30,6 +30,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   glEnable(GL_NORMALIZE);
   glEnable(GL_COLOR_MATERIAL);
   
+  // Update the lighting effects
   GLfloat af[4]; 
   af[0]=0.5; af[1]=0.5; af[2]=0.5; af[3]=1.0;
   glLightfv(GL_LIGHT0, GL_AMBIENT, af);
@@ -39,9 +40,9 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   af[0]=1.0; af[1]=1.0; af[2]=1.0; af[3]=1.0;
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, af);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0);
-  
+    
+  // Update the 3D model for every eye
   glMatrixMode(GL_MODELVIEW);
-  
   for(int i=0; i<4; i++)
     {
       if(mnFrameCounter < 100)
@@ -57,6 +58,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
 
   glDisable(GL_LIGHTING);
   
+  // Update the text
   glLoadIdentity();
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, mnShadowTex);
@@ -72,6 +74,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   glTexCoord2f(1,0);
   glVertex2d( mdShadowHalfSize, -mdShadowHalfSize);
   glEnd();
+
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);

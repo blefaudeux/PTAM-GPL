@@ -13,6 +13,7 @@ ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw)
 {
   mirFrameSize = irFrameSize;
   mCamera.SetImageSize(mirFrameSize);
+  assetModel = NULL;
   mbInitialised = false;
 }
 
@@ -27,12 +28,25 @@ void ARDriver::Init()
 	       GL_RGBA, GL_UNSIGNED_BYTE, NULL); 
   MakeFrameBuffer();
   mGame.Init();
+
+  // Create and load the 3D model from file
+  if (NULL == assetModel)
+    assetModel = new ARModel();
 };
 
 void ARDriver::Reset()
 {
   mGame.Reset();
   mnCounter = 0;
+}
+
+void ARDriver::LoadARModel(std::string &model_file)
+{
+  if (NULL == assetModel) {
+    assetModel = new ARModel();
+  }
+
+  assetModel->loadModelFromFile(model_file);
 }
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
@@ -68,10 +82,12 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
   glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100));
   glMultMatrix(se3CfromW);
   
+  // Draw the 3D models
   DrawFadingGrid();
-  
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
-  
+  if (assetsLoaded)
+    assetModel->draw(se3CfromW.inverse().get_translation());
+
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_BLEND);

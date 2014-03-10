@@ -35,6 +35,7 @@ public:
   int   GetCurrentKeyframes();
   int   GetCurrentPoints();
   int   GetDiscardedPoints();
+  bool  LoadARModel(std::string &model_file);
 
 private:
   VideoSource mVideoSource;

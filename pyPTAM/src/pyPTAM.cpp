@@ -62,18 +62,6 @@ public :
     s->Run();
   }
 
-  // Start the frame grabbing and computations on a seperate thread
-  void Start() {
-    if (!is_slam_started) {
-      // Start the thread, OpenGL context will be allocated within
-      sys_thread = new boost::thread(boost::bind(&pyPTAM::ConstructAndWrap, this));
-
-      cout << "PTAM: Thread started" << endl;
-    } else {
-      cout << "PTAM: Already started" << endl;
-    }
-  }
-
   /*!
    * \brief GetPose
    * \param Python list to output the values
@@ -131,9 +119,27 @@ public :
 //      cout << "PTAM: Map reset" << endl;
 //    }
 //  }
+
+  void LoadARModel(std::string &model_file) {
+    s->LoadARModel(model_file);
+  }
+
+  // Start the frame grabbing and computations on a seperate thread
+  void Start() {
+    if (!is_slam_started) {
+      // Start the thread, OpenGL context will be allocated within
+      sys_thread = new boost::thread(boost::bind(&pyPTAM::ConstructAndWrap, this));
+
+      cout << "PTAM: Thread started" << endl;
+    } else {
+      cout << "PTAM: Already started" << endl;
+    }
+  }
 };
 
 
+/***********************************/
+/* Define the Python access points */
 BOOST_PYTHON_MODULE(libpyPTAM)
 {
   using namespace boost::python;
@@ -149,6 +155,7 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
+      .def("LoadARModel",         &pyPTAM::LoadARModel)
 //      .def("MapReset",            &pyPTAM::MapReset)
       ;
 }

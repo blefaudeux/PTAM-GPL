@@ -2,4 +2,5 @@
 *.so
 *.a
 *.autosave
+*.idea
 build
