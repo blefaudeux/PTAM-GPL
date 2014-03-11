@@ -1,7 +1,10 @@
 # Define the project's name
 project(pyPTAM)
-
 cmake_minimum_required(VERSION 2.6)
+
+# Get to know where all the dependencies are..
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../libPTAM/dependencies)
+message("Additional lookup directory:\n ${CMAKE_MODULE_PATH}")
 
 # Add all the files we're interested in (mostly for QTCreator)
 file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
@@ -10,6 +13,10 @@ file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(Boost_USE_STATIC_LIBS  OFF)
 set(Boost_USE_MULTITHREADED ON)
 find_package(Boost REQUIRED)
+find_package(Assimp REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(DevIL REQUIRED)
+
 #find_package(PythonLibs REQUIRED) # Will depend on the Boost version...
 
 # Find Python 2.7 (Boost <1.54)
@@ -71,7 +78,7 @@ IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
 # Set the link libraries :
-set(LINK_LIBS  ${PTAM_LIBRARY} ${Boost_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${PYTHON_LIBRARIES})
+set(LINK_LIBS ${IL_LIBRARIES} ${ASSIMP_LIBRARIES} ${GLEW_LIBRARIES} ${PTAM_LIBRARY} ${Boost_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${PYTHON_LIBRARIES})
 
 target_link_libraries(pyPTAM ${LINK_LIBS} )
 

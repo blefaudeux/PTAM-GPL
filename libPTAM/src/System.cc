@@ -79,10 +79,12 @@ void System::Run()
       // seperate thread
       mpMapViewer = new MapViewer(*mpMap, mGLWindow);
       mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow);
+      cout << "Init" << endl;
       mpARDriver->Init();
 
       if (ARDriver_load_pending) {
-          this->mpARDriver->LoadARModel(AR_assets_filename);
+          cout << "Loading assets" << endl;
+          mpARDriver->LoadARModel(AR_assets_filename);
         }
 
       ARDriver_initialized = true;

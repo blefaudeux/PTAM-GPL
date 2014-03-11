@@ -42,14 +42,9 @@
 
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
-
-// GLUT is the toolkit to interface with the OS
 #include <GL/freeglut.h>
-
-// include DevIL for image loading
 #include <IL/il.h>
 
-// auxiliary C file to read the shader text files
 #include "Textfile.h"
 
 // assimp include files. These three are usually needed.
@@ -137,7 +132,11 @@ public :
 
   static void color4_to_float4(const aiColor4D *c, float f[4]);
 
-  bool  Import3DFromFile( const string& pFile);
+  bool  import3DFromFile( const string& pFile);
+  int   init();
+
+  // - render in an external FB
+  void renderSceneToFB(GLint fb);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
@@ -232,7 +231,6 @@ private:
                   float lookAtX, float lookAtY, float lookAtZ);
 
   GLuint setupShaders();
-  int   init();
   int   LoadGLTextures(const aiScene* scene);
   void  genVAOsAndUniformBuffer(const aiScene *sc);
   void  printShaderInfoLog(GLuint obj);
@@ -240,7 +238,7 @@ private:
 
   // Rendering methods
   // - render Assimp Model
-  void recursive_render (const aiScene *sc, const aiNode* nd);
+  void recursiveRender (const aiScene *sc, const aiNode* nd);
 
   // - rendering Callback Function
   void renderScene(void);

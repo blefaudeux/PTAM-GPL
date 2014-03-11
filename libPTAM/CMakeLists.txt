@@ -10,6 +10,8 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the included directories
 find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
+message("Assimp found : \n " ${ASSIMP_LIBRARIES})
+
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
@@ -37,7 +39,7 @@ add_library (PTAMs STATIC ${SRC} ${HEADERS})
 add_library (PTAMd SHARED ${SRC} ${HEADERS})
 
 # Set the link libraries :
-set(LINK_LIBS ${IL_LIBRARIES} ${GLEW_LIBRARIES} ${DEVIL_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
+set(LINK_LIBS ${ASSIMP_LIBRARIES} ${IL_LIBRARIES} ${GLEW_LIBRARIES} ${DEVIL_LIBRARIES} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
 
 target_link_libraries(PTAMs ${LINK_LIBS})
 target_link_libraries(PTAMd ${LINK_LIBS})

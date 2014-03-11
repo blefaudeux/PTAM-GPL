@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <gvars3/instances.h>
-#include "System.h"
-
+#include "PTAM/System.h"
 
 using namespace std;
 using namespace GVars3;
@@ -22,8 +21,7 @@ int main()
   GUI.StartParserThread(); // Start parsing of the console input
   atexit(GUI.StopParserThread); 
   
-  try
-    {
+  try {
       System s;
       s.Run();
     }

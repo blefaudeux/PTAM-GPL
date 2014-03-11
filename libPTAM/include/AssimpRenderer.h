@@ -42,14 +42,9 @@
 
 // include GLEW to access OpenGL 3.3 functions
 #include <GL/glew.h>
-
-// GLUT is the toolkit to interface with the OS
 #include <GL/freeglut.h>
-
-// include DevIL for image loading
 #include <IL/il.h>
 
-// auxiliary C file to read the shader text files
 #include "Textfile.h"
 
 // assimp include files. These three are usually needed.
@@ -62,6 +57,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define MatricesUniBufferSize sizeof(float) * 16 * 3
 #define ProjMatrixOffset 0
@@ -76,6 +72,8 @@
 #ifndef M_PI
 #define M_PI  3.14159265358979323846f
 #endif
+
+using namespace std;
 
 // Information to render each assimp node
 struct MyMesh{
@@ -134,12 +132,19 @@ public :
 
   static void color4_to_float4(const aiColor4D *c, float f[4]);
 
+  bool  import3DFromFile( const string& pFile);
+  int   init();
+
+  // - render in an external FB
+  void renderSceneToFB(GLint fb);
+
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
   float modelMatrix[16];
+  bool b_loaded_assets;
 
   // For push and pop matrix
-  std::vector<float *> matrixStack;
+  vector<float *> matrixStack;
 
   // Vertex Attribute Locations
   GLuint vertexLoc, normalLoc, texCoordLoc;
@@ -153,7 +158,7 @@ private:
   GLuint texUnit;
 
   // Store the meshes
-  std::vector<struct MyMesh> myMeshes;
+  vector<struct MyMesh> myMeshes;
 
   // Uniform Buffer for Matrices
   // this buffer will contain 3 matrices: projection, view and model
@@ -175,26 +180,23 @@ private:
   // images / texture
   // map image filenames to textureIds
   // pointer to texture Array
-  std::map<std::string, GLuint> textureIdMap;
+  map<string, GLuint> textureIdMap;
 
   // Replace the model name by your model's filename
-  std::string modelname;
+  string modelname;
 
-  // Camera Position
-  float camX, camY, camZ;
+  // Camera Position & attitude
+  float camX, camY, camZ, alpha, beta, r;
 
-  // Camera Spherical Coordinates
-  float alpha, beta, r;
+  // Frame counting and FPS computation
+  long time,timebase,frame;
+  char s[32];
 
   void get_bounding_box_for_node (const aiNode* nd,
                                   aiVector3D* min,
                                   aiVector3D* max);
 
   void get_bounding_box (aiVector3D* min, aiVector3D* max);
-
-  // Frame counting and FPS computation
-  long time,timebase,frame;
-  char s[32];
 
   // MATRIX STUFF
   // Push and Pop for modelMatrix
@@ -228,28 +230,15 @@ private:
   void  setCamera(float posX, float posY, float posZ,
                   float lookAtX, float lookAtY, float lookAtZ);
 
-  void  processKeys(unsigned char key, int xx, int yy);
-
   GLuint setupShaders();
-
-  int   init();
-
-  bool  Import3DFromFile( const std::string& pFile);
-
   int   LoadGLTextures(const aiScene* scene);
-
   void  genVAOsAndUniformBuffer(const aiScene *sc);
-
   void  printShaderInfoLog(GLuint obj);
   void  printProgramInfoLog(GLuint obj);
 
-  // Reshape Callback Function
-  void changeSize(int w, int h);
-
-  // ------------------------------------------------------------
-  // Render stuff
+  // Rendering methods
   // - render Assimp Model
-  void recursive_render (const aiScene *sc, const aiNode* nd);
+  void recursiveRender (const aiScene *sc, const aiNode* nd);
 
   // - rendering Callback Function
   void renderScene(void);

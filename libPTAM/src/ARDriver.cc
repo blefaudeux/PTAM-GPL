@@ -13,14 +13,15 @@ ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw)
 {
   mirFrameSize = irFrameSize;
   mCamera.SetImageSize(mirFrameSize);
-  // assetModel = NULL;
-  target_model = NULL;
+
+  target_model  = NULL;
   mbInitialised = false;
-  assetsLoaded = false;
+  assetsLoaded  = false;
 }
 
 void ARDriver::Init()
 {
+  cout << "ARDriver : init" << endl;
   mbInitialised = true;
   mirFBSize = GV3::get<ImageRef>("ARDriver.FrameBufferSize", ImageRef(1200,900), SILENT);
   glGenTextures(1, &mnFrameTex);
@@ -28,6 +29,7 @@ void ARDriver::Init()
   glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0,
                GL_RGBA, mirFrameSize.x, mirFrameSize.y, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glewInit();
   MakeFrameBuffer();
 
   // Init the GL-Eyes
@@ -35,38 +37,35 @@ void ARDriver::Init()
 
   // Init the Assimp handler
   target_model = new AssimpRenderer();
-  // TODO: bound the renderer GL to the existing window
+  cout << "ARDriver : Init done" << endl;
 }
 
-void ARDriver::Reset()
-{
+void ARDriver::Reset()  {
   mGame.Reset();
   mnCounter = 0;
 }
 
 void ARDriver::LoadARModel(std::string model_file)
-{ 
+{
   if (NULL==target_model) {
-    cout << "ARDriver : allocating Assimp renderer" <<endl;
     target_model = new AssimpRenderer();
-    cout << "ARDriver : new asset created" <<endl;
-    }
+    cout << "ARDriver : new renderer created" << endl;
+  }
 
-  cout << "ARDriver : loading " << model_file;
-  target_model->Import3DFromFile(model_file);
+  target_model->import3DFromFile(model_file);
   cout << "ARDriver : new model loaded" << endl;
 }
 
-void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
-{
+void ARDriver::Render(Image<Rgb<byte> > &imFrame,
+                      SE3<> se3CfromW)  {
   if(!mbInitialised)  {
-      Init();
-      Reset();
+    Init();
+    Reset();
 
-      // Init the auxiliary renderer, and bound it to the existing window
-      // TODO
-      target_model.init();
-    };
+    // Init the auxiliary renderer, and bound it to the existing window
+    if (NULL != target_model)
+      target_model->init();
+  };
   
   mnCounter++;
   
@@ -97,9 +96,10 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
   DrawFadingGrid();
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
-  // TODO :
-  // Do the drawing from the Assimp renderer
-  // Bound the framebuffers..
+  // Call the Assimp renderer to add the loaded 3D model to the scene
+  cout << "ADriver : calling AssimpRenderer" << endl;
+  target_model->renderSceneToFB(1);
+  cout << "ADriver : calling AssimpRenderer" << endl;
 
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -110,7 +110,6 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
   
   // Set up for drawing 2D stuff:
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
-  
   DrawDistortedFB();
   
   glMatrixMode(GL_MODELVIEW);
@@ -120,11 +119,8 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
   mGLWindow.SetupVideoRasterPosAndZoom();
 }
 
-
-
 void ARDriver::MakeFrameBuffer()
 {
-  cout << "  ARDriver: Creating FBO... ";
   glGenTextures(1, &mnFrameBufferTex);
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB,mnFrameBufferTex);
   glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0,
@@ -134,9 +130,17 @@ void ARDriver::MakeFrameBuffer()
   glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   GLuint DepthBuffer;
+  cout << "  ARDriver: Creating FBO... " << endl;
+
   glGenRenderbuffersEXT(1, &DepthBuffer);
+  cout << "  ARDriver: Creating FBO... " << endl;
+
   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, DepthBuffer);
+  cout << "  ARDriver: Creating FBO... " << endl;
+
   glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, mirFBSize.x, mirFBSize.y);
+
+  cout << "  ARDriver: Creating FBO... " << endl;
 
   glGenFramebuffersEXT(1, &mnFrameBuffer);
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mnFrameBuffer);
@@ -144,14 +148,14 @@ void ARDriver::MakeFrameBuffer()
                             GL_TEXTURE_RECTANGLE_ARB, mnFrameBufferTex, 0);
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
                                GL_RENDERBUFFER_EXT, DepthBuffer);
-  
+  cout << "  ARDriver: Creating FBO... " << endl;
+
   CheckFramebufferStatus();
   cout << " .. created FBO." << endl;
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
-static bool CheckFramebufferStatus()         
-{                                            
+static bool CheckFramebufferStatus()  {
   GLenum n;
   n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 
@@ -160,10 +164,9 @@ static bool CheckFramebufferStatus()
   
   cout << "glCheckFrameBufferStatusExt returned an error." << endl;
   return false;
-};
+}
 
-void ARDriver::DrawFBBackGround()
-{
+void ARDriver::DrawFBBackGround() {
   static bool bFirstRun = true;
   static GLuint nList;
   mGLWindow.SetupUnitOrtho();
@@ -176,40 +179,40 @@ void ARDriver::DrawFBBackGround()
   glDisable(GL_BLEND);
   // Cache the cpu-intesive projections in a display list..
   if(bFirstRun)
-    {
-      bFirstRun = false;
-      nList = glGenLists(1);
-      glNewList(nList, GL_COMPILE_AND_EXECUTE);
-      glColor3f(1,1,1);
-      // How many grid divisions in the x and y directions to use?
-      int nStepsX = 24; // Pretty arbitrary..
-      int nStepsY = (int) (nStepsX * ((double) mirFrameSize.x / mirFrameSize.y)); // Scaled by aspect ratio
-      if(nStepsY < 2)
-        nStepsY = 2;
-      for(int ystep = 0; ystep< nStepsY; ystep++)
-        {
-          glBegin(GL_QUAD_STRIP);
-          for(int xstep = 0; xstep <= nStepsX; xstep++)
-            for(int yystep = ystep; yystep<=ystep+1; yystep++) // Two y-coords in one go - magic.
-              {
-                Vector<2> v2Iter;
-                v2Iter[0] = (double) xstep / nStepsX;
-                v2Iter[1] = (double) yystep / nStepsY;
-                // If this is a border quad, draw a little beyond the
-                // outside of the frame, this avoids strange jaggies
-                // at the edge of the reconstructed frame later:
-                if(xstep == 0 || yystep == 0 || xstep == nStepsX || yystep == nStepsY)
-                  for(int i=0; i<2; i++)
-                    v2Iter[i] = v2Iter[i] * 1.02 - 0.01;
-                Vector<2> v2UFBDistorted = v2Iter;
-                Vector<2> v2UFBUnDistorted = mCamera.UFBLinearProject(mCamera.UFBUnProject(v2UFBDistorted));
-                glTexCoord2d(v2UFBDistorted[0] * mirFrameSize.x, v2UFBDistorted[1] * mirFrameSize.y);
-                glVertex(v2UFBUnDistorted);
-              }
-          glEnd();
+  {
+    bFirstRun = false;
+    nList = glGenLists(1);
+    glNewList(nList, GL_COMPILE_AND_EXECUTE);
+    glColor3f(1,1,1);
+    // How many grid divisions in the x and y directions to use?
+    int nStepsX = 24; // Pretty arbitrary..
+    int nStepsY = (int) (nStepsX * ((double) mirFrameSize.x / mirFrameSize.y)); // Scaled by aspect ratio
+    if(nStepsY < 2)
+      nStepsY = 2;
+    for(int ystep = 0; ystep< nStepsY; ystep++) {
+      glBegin(GL_QUAD_STRIP);
+      for(int xstep = 0; xstep <= nStepsX; xstep++)
+        for(int yystep = ystep; yystep<=ystep+1; yystep++) { // Two y-coords in one go - magic.
+          Vector<2> v2Iter;
+          v2Iter[0] = (double) xstep / nStepsX;
+          v2Iter[1] = (double) yystep / nStepsY;
+
+          // If this is a border quad, draw a little beyond the
+          // outside of the frame, this avoids strange jaggies
+          // at the edge of the reconstructed frame later:
+          if(xstep == 0 || yystep == 0 || xstep == nStepsX || yystep == nStepsY)
+            for(int i=0; i<2; i++)
+              v2Iter[i] = v2Iter[i] * 1.02 - 0.01;
+
+          Vector<2> v2UFBDistorted = v2Iter;
+          Vector<2> v2UFBUnDistorted = mCamera.UFBLinearProject(mCamera.UFBUnProject(v2UFBDistorted));
+          glTexCoord2d(v2UFBDistorted[0] * mirFrameSize.x, v2UFBDistorted[1] * mirFrameSize.y);
+          glVertex(v2UFBUnDistorted);
         }
-      glEndList();
+      glEnd();
     }
+    glEndList();
+  }
   else
     glCallList(nList);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
@@ -231,34 +234,34 @@ void ARDriver::DrawDistortedFB()
   glDisable(GL_POLYGON_SMOOTH);
   glDisable(GL_BLEND);
   if(bFirstRun)
+  {
+    bFirstRun = false;
+    nList = glGenLists(1);
+    glNewList(nList, GL_COMPILE_AND_EXECUTE);
+    // How many grid divisions in the x and y directions to use?
+    int nStepsX = 24; // Pretty arbitrary..
+    int nStepsY = (int) (nStepsX * ((double) mirFrameSize.x / mirFrameSize.y)); // Scaled by aspect ratio
+    if(nStepsY < 2)
+      nStepsY = 2;
+    glColor3f(1,1,1);
+    for(int ystep = 0; ystep<nStepsY; ystep++)
     {
-      bFirstRun = false;
-      nList = glGenLists(1);
-      glNewList(nList, GL_COMPILE_AND_EXECUTE);
-      // How many grid divisions in the x and y directions to use?
-      int nStepsX = 24; // Pretty arbitrary..
-      int nStepsY = (int) (nStepsX * ((double) mirFrameSize.x / mirFrameSize.y)); // Scaled by aspect ratio
-      if(nStepsY < 2)
-        nStepsY = 2;
-      glColor3f(1,1,1);
-      for(int ystep = 0; ystep<nStepsY; ystep++)
+      glBegin(GL_QUAD_STRIP);
+      for(int xstep = 0; xstep<=nStepsX; xstep++)
+        for(int yystep = ystep; yystep<=ystep + 1; yystep++) // Two y-coords in one go - magic.
         {
-          glBegin(GL_QUAD_STRIP);
-          for(int xstep = 0; xstep<=nStepsX; xstep++)
-            for(int yystep = ystep; yystep<=ystep + 1; yystep++) // Two y-coords in one go - magic.
-              {
-                Vector<2> v2Iter;
-                v2Iter[0] = (double) xstep / nStepsX;
-                v2Iter[1] = (double) yystep / nStepsY;
-                Vector<2> v2UFBDistorted = v2Iter;
-                Vector<2> v2UFBUnDistorted = mCamera.UFBLinearProject(mCamera.UFBUnProject(v2UFBDistorted));
-                glTexCoord2d(v2UFBUnDistorted[0] * mirFBSize.x, (1.0 - v2UFBUnDistorted[1]) * mirFBSize.y);
-                glVertex(v2UFBDistorted);
-              }
-          glEnd();
+          Vector<2> v2Iter;
+          v2Iter[0] = (double) xstep / nStepsX;
+          v2Iter[1] = (double) yystep / nStepsY;
+          Vector<2> v2UFBDistorted = v2Iter;
+          Vector<2> v2UFBUnDistorted = mCamera.UFBLinearProject(mCamera.UFBUnProject(v2UFBDistorted));
+          glTexCoord2d(v2UFBUnDistorted[0] * mirFBSize.x, (1.0 - v2UFBUnDistorted[1]) * mirFBSize.y);
+          glVertex(v2UFBDistorted);
         }
-      glEndList();
+      glEnd();
     }
+    glEndList();
+  }
   else
     glCallList(nList);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
@@ -281,30 +284,30 @@ void ARDriver::DrawFadingGrid()
   Vector<3>  aaVertex[17][17];
   for(int i=0; i<nTot; i++)
     for(int j=0; j<nTot; j++)
-      {
-        Vector<3> v3;
-        v3[0] = (i - nHalfCells) * 0.1;
-        v3[1] = (j - nHalfCells) * 0.1;
-        v3[2] = 0.0;
-        aaVertex[i][j] = v3;
-      }
+    {
+      Vector<3> v3;
+      v3[0] = (i - nHalfCells) * 0.1;
+      v3[1] = (j - nHalfCells) * 0.1;
+      v3[2] = 0.0;
+      aaVertex[i][j] = v3;
+    }
 
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glLineWidth(2);
   for(int i=0; i<nTot; i++)
-    {
-      glBegin(GL_LINE_STRIP);
-      for(int j=0; j<nTot; j++)
-        glVertex(aaVertex[i][j]);
-      glEnd();
-      
-      glBegin(GL_LINE_STRIP);
-      for(int j=0; j<nTot; j++)
-        glVertex(aaVertex[j][i]);
-      glEnd();
-    };
+  {
+    glBegin(GL_LINE_STRIP);
+    for(int j=0; j<nTot; j++)
+      glVertex(aaVertex[i][j]);
+    glEnd();
+
+    glBegin(GL_LINE_STRIP);
+    for(int j=0; j<nTot; j++)
+      glVertex(aaVertex[j][i]);
+    glEnd();
+  };
 };
 
 

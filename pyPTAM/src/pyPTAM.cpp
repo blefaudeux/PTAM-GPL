@@ -51,7 +51,7 @@ public :
 
   void ConstructAndWrap() {
     // Read the settings
-    cout << "  Parsing " <<  config_file << "and console" <<  endl;
+    cout << "  Parsing " <<  config_file << " and console" <<  endl;
     GUI.LoadFile(config_file);
     GUI.StartParserThread(); // Start parsing of the console input
     atexit(GUI.StopParserThread);
@@ -61,11 +61,13 @@ public :
 
     // Load the assets if needed
     if (!AR_assets_file.empty()) {
+        cout << "Deferred loading taking place" << endl;
         s->LoadARModel(AR_assets_file);
       }
 
     // Start the computations
     is_slam_started = true;
+    cout << "Starting computations" << endl;
     s->Run();
   }
 

@@ -22,6 +22,9 @@ find_package(LAPACK REQUIRED)
 find_package(CVD REQUIRED)
 find_package(GVars3 REQUIRED)
 find_package(TooN REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(Assimp REQUIRED)
+find_package(DevIL REQUIRED)
 
 # Get the PTAM lib and inclues:
 find_path(PTAM_INCLUDE_DIR PTAM/System.h
@@ -40,6 +43,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
 include_directories(${PTAM_INCLUDE_DIR})
+
 
 message("\nPTAM lib :\n ${PTAM_LIBRARY}\n ${PTAM_INCLUDE_DIR}\n")
 
@@ -61,7 +65,7 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Set the link libraries :
-set(LINK_LIBS  ${PTAM_LIBRARY} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES})
+set(LINK_LIBS ${IL_LIBRARIES} ${ASSIMP_LIBRARIES} ${GLEW_LIBRARIES} ${PTAM_LIBRARY} ${CVD_LIBRARIES} ${GVARS3_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES}  ${Boost_LIBRARIES})
 
 # Build the executable
 message("Source files : ${SRC}")

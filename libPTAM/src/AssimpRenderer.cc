@@ -329,7 +329,7 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
-bool AssimpRenderer::Import3DFromFile(const std::string& pFile) {
+bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
 
   if (b_loaded_assets)
     cout << "Assimp : loading a new model over existing assets" << endl;
@@ -338,19 +338,17 @@ bool AssimpRenderer::Import3DFromFile(const std::string& pFile) {
   std::ifstream fin(pFile.c_str());
   if(!fin.fail()) {
     fin.close();
-    }
-  else{
+  } else{
     printf("Couldn't open file: %s\n", pFile.c_str());
     printf("%s\n", importer.GetErrorString());
     return false;
-    }
+  }
 
   // Import the scene using Assimp C++ API
   scene = importer.ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
 
   // If the import failed, report it
-  if( !scene)
-    {
+  if( !scene) {
     printf("%s\n", importer.GetErrorString());
     return false;
     }
@@ -586,8 +584,8 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
 
 // RENDER
 // - render Assimp Model
-void AssimpRenderer::recursive_render (const aiScene *sc,
-                                       const aiNode* nd)
+void AssimpRenderer::recursiveRender (const aiScene *sc,
+                                      const aiNode* nd)
 {
   // Get node transformation matrix
   aiMatrix4x4 m = nd->mTransformation;
@@ -603,7 +601,8 @@ void AssimpRenderer::recursive_render (const aiScene *sc,
   // draw all meshes assigned to this node
   for (unsigned int n=0; n < nd->mNumMeshes; ++n){
     // bind material uniform
-    glBindBufferRange(GL_UNIFORM_BUFFER, materialUniLoc, myMeshes[nd->mMeshes[n]].uniformBlockIndex, 0, sizeof(struct MyMaterial));
+    glBindBufferRange(GL_UNIFORM_BUFFER, materialUniLoc,
+                      myMeshes[nd->mMeshes[n]].uniformBlockIndex, 0, sizeof(struct MyMaterial));
     // bind texture
     glBindTexture(GL_TEXTURE_2D, myMeshes[nd->mMeshes[n]].texIndex);
     // bind VAO
@@ -614,7 +613,7 @@ void AssimpRenderer::recursive_render (const aiScene *sc,
 
   // draw all children
   for (unsigned int n=0; n < nd->mNumChildren; ++n){
-    recursive_render(sc, nd->mChildren[n]);
+    recursiveRender(sc, nd->mChildren[n]);
     }
   popMatrix();
 }
@@ -647,7 +646,7 @@ void AssimpRenderer::renderScene(void) {
   // so we have set this uniform separately
   glUniform1i(texUnit,0);
 
-  recursive_render(scene, scene->mRootNode);
+  recursiveRender(scene, scene->mRootNode);
 
   // FPS computation and display
   frame++;
@@ -662,6 +661,27 @@ void AssimpRenderer::renderScene(void) {
 
   // swap buffers
   glutSwapBuffers();
+}
+
+void AssimpRenderer::renderSceneToFB(GLint fb) {
+//  // set camera matrix
+//  setCamera(camX,camY,camZ,0,0,0);
+
+//  // set the model matrix to the identity Matrix
+//  setIdentityMatrix(modelMatrix,4);
+
+//  // sets the model matrix to a scale matrix so that the model fits in the window
+//  scale(scaleFactor, scaleFactor, scaleFactor);
+
+  // use our shader
+  glUseProgram(program);
+
+  // we are only going to use texture unit 0
+  // unfortunately samplers can't reside in uniform blocks
+  // so we have set this uniform separately
+  glUniform1i(texUnit,0);
+
+//  recursiveRender(scene, scene->mRootNode);
 }
 
 // SHADERS
@@ -727,7 +747,8 @@ GLuint AssimpRenderer::setupShaders() {
 //
 int AssimpRenderer::init()
 {
-  //	Init GLEW
+  cout << "AssimpRenderer : init" << endl;
+
   glewInit();
   if (glewIsSupported("GL_VERSION_3_3"))
     printf("Ready for OpenGL 3.3\n");
@@ -737,7 +758,7 @@ int AssimpRenderer::init()
     }
 
   // Load a model if needed
-  if ((!b_loaded_assets) && !Import3DFromFile(modelname))
+  if ((!b_loaded_assets) && !import3DFromFile(modelname))
     return(0);
 
   LoadGLTextures(scene); // scene is defined from the previous Import3DFile
