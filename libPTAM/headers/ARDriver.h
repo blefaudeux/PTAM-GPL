@@ -10,7 +10,10 @@
 //
 #ifndef __AR_Driver_H
 #define __AR_Driver_H
-#include "ARModel.h"
+
+//#include "ARModel.h"
+#include "AssimpRenderer.h"
+
 #include <TooN/se3.h>
 #include "ATANCamera.h"
 #include <cvd/image.h>
@@ -55,6 +58,8 @@ class ARDriver
 
   // Eyeballs:
   EyeGame mGame;
-  ARModel *assetModel;
+
+  // Instance to load custom 3D models and handle the rendering
+  AssimpRenderer *target_model;
 };
 #endif

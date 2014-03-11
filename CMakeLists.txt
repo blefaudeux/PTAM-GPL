@@ -3,7 +3,7 @@ project (PTAM)
 
 # Get to know where all the dependencies are..
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/libPTAM/dependencies)
-message("Additional lookup directory : ${CMAKE_MODULE_PATH}")
+message("Additional lookup directory:\n ${CMAKE_MODULE_PATH}")
 
 # Try to find the needed packages
 set(Boost_USE_STATIC_LIBS  OFF)
@@ -15,6 +15,7 @@ find_package(LAPACK REQUIRED)
 find_package(CVD REQUIRED)
 find_package(GVars3 REQUIRED)
 find_package(TooN REQUIRED)
+find_package(DevIL REQUIRED)
 
 message("\nGVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
 message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")

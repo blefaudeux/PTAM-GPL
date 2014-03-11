@@ -57,7 +57,6 @@ bool ARModel::loadModelFromFile(std::string model_file) {
 
 void ARModel::Reset() {
   worldFromModel= SE3<>();
-
   worldFromModel.get_translation()[0] = -mdModelRadius;
   worldFromModel.get_translation()[1] = -mdModelRadius;
   worldFromModel.get_translation()[2] = mdModelRadius;

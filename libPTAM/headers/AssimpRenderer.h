@@ -62,6 +62,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define MatricesUniBufferSize sizeof(float) * 16 * 3
 #define ProjMatrixOffset 0
@@ -77,6 +78,8 @@
 #define M_PI  3.14159265358979323846f
 #endif
 
+using namespace std;
+
 // Information to render each assimp node
 struct MyMesh{
   GLuint vao;
@@ -84,8 +87,6 @@ struct MyMesh{
   GLuint uniformBlockIndex;
   int numFaces;
 };
-
-std::vector<struct MyMesh> myMeshes;
 
 // This is for a shader uniform block
 struct MyMaterial{
@@ -100,6 +101,7 @@ struct MyMaterial{
 class AssimpRenderer {
 public :
   AssimpRenderer();
+  ~AssimpRenderer();
 
   // Support functions :
   static int  printOglError(char *file, int line);
@@ -135,19 +137,15 @@ public :
 
   static void color4_to_float4(const aiColor4D *c, float f[4]);
 
-
-  static inline float
-  DegToRad(float degrees)
-  {
-    return (float)(degrees * (M_PI / 180.0f));
-  };
+  bool  Import3DFromFile( const string& pFile);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
   float modelMatrix[16];
+  bool b_loaded_assets;
 
   // For push and pop matrix
-  std::vector<float *> matrixStack;
+  vector<float *> matrixStack;
 
   // Vertex Attribute Locations
   GLuint vertexLoc, normalLoc, texCoordLoc;
@@ -160,6 +158,9 @@ private:
   //always be texture unit 0
   GLuint texUnit;
 
+  // Store the meshes
+  vector<struct MyMesh> myMeshes;
+
   // Uniform Buffer for Matrices
   // this buffer will contain 3 matrices: projection, view and model
   // each matrix is a float array with 16 components
@@ -167,10 +168,6 @@ private:
 
   // Program and Shader Identifiers
   GLuint program, vertexShader, fragmentShader;
-
-  // Shader Names
-  char *vertexFileName;
-  char *fragmentFileName;
 
   // Create an instance of the Importer class
   Assimp::Importer importer;
@@ -184,26 +181,23 @@ private:
   // images / texture
   // map image filenames to textureIds
   // pointer to texture Array
-  std::map<std::string, GLuint> textureIdMap;
+  map<string, GLuint> textureIdMap;
 
   // Replace the model name by your model's filename
-  static const std::string modelname;
+  string modelname;
 
-  // Camera Position
-  float camX, camY, camZ;
+  // Camera Position & attitude
+  float camX, camY, camZ, alpha, beta, r;
 
-  // Camera Spherical Coordinates
-  float alpha, beta, r;
+  // Frame counting and FPS computation
+  long time,timebase,frame;
+  char s[32];
 
   void get_bounding_box_for_node (const aiNode* nd,
                                   aiVector3D* min,
                                   aiVector3D* max);
 
   void get_bounding_box (aiVector3D* min, aiVector3D* max);
-
-  // Frame counting and FPS computation
-  long time,timebase,frame;
-  char s[32];
 
   // MATRIX STUFF
   // Push and Pop for modelMatrix
@@ -237,26 +231,14 @@ private:
   void  setCamera(float posX, float posY, float posZ,
                   float lookAtX, float lookAtY, float lookAtZ);
 
-  void  processKeys(unsigned char key, int xx, int yy);
-
   GLuint setupShaders();
-
   int   init();
-
-  bool  Import3DFromFile( const std::string& pFile);
-
   int   LoadGLTextures(const aiScene* scene);
-
   void  genVAOsAndUniformBuffer(const aiScene *sc);
-
   void  printShaderInfoLog(GLuint obj);
   void  printProgramInfoLog(GLuint obj);
 
-  // Reshape Callback Function
-  void changeSize(int w, int h);
-
-  // ------------------------------------------------------------
-  // Render stuff
+  // Rendering methods
   // - render Assimp Model
   void recursive_render (const aiScene *sc, const aiNode* nd);
 

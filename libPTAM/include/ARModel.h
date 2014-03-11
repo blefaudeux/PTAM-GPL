@@ -6,16 +6,16 @@
  * PTAM AR extension to load different OpenGL models as needed.
  */
 
+// TODO : Try to use the renderer from Lighthouse3D to tap into the GLWindow
+// managed by ARDriver..
+
+#include "AssimpRenderer.h"
+
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
 #include <stdlib.h>
-#include "OpenGL.h"
 #include <cvd/convolution.h>
-
-// Load assets using ASSIMP
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <OpenGL.h>
 
 using namespace TooN;
 
@@ -28,17 +28,18 @@ public:
   void Reset();
   void Init();
 
-
 private:
-  double mdModelRadius;
-  const aiScene* scene;
-  Assimp::Importer importer;
   bool mbInitialised;
   SE3<> worldFromModel;
   std::string model_file;
+
+  // Scene data :
+  double mdModelRadius;
+  const aiScene* scene;
+  Assimp::Importer importer;
   aiVector3D scene_min, scene_max, scene_center;
 
-  void drawModel();
+  void recursiveRender (const aiScene *sc, const aiNode* nd);
   void getBoundingBox (aiVector3D* min, aiVector3D* max);
   void getBoundingBoxForNode (const aiNode* nd,
                               aiVector3D* min,

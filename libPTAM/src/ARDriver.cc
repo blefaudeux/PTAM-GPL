@@ -13,7 +13,8 @@ ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw)
 {
   mirFrameSize = irFrameSize;
   mCamera.SetImageSize(mirFrameSize);
-  assetModel = NULL;
+  // assetModel = NULL;
+  target_model = NULL;
   mbInitialised = false;
   assetsLoaded = false;
 }
@@ -28,7 +29,13 @@ void ARDriver::Init()
                GL_RGBA, mirFrameSize.x, mirFrameSize.y, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   MakeFrameBuffer();
+
+  // Init the GL-Eyes
   mGame.Init();
+
+  // Init the Assimp handler
+  target_model = new AssimpRenderer();
+  // TODO: bound the renderer GL to the existing window
 }
 
 void ARDriver::Reset()
@@ -38,25 +45,27 @@ void ARDriver::Reset()
 }
 
 void ARDriver::LoadARModel(std::string model_file)
-{
-  if (NULL == assetModel) {
-      cout << "ARDriver : allocating assetModel" << endl;
-      assetModel = new ARModel();
-      cout << "ARDriver : New asset created " << endl;
+{ 
+  if (NULL==target_model) {
+    cout << "ARDriver : allocating Assimp renderer" <<endl;
+    target_model = new AssimpRenderer();
+    cout << "ARDriver : new asset created" <<endl;
     }
 
   cout << "ARDriver : loading " << model_file;
-  assetModel->loadModelFromFile(model_file);
-  cout << " is OK" << endl;
-  assetsLoaded = true;
+  target_model->Import3DFromFile(model_file);
+  cout << "ARDriver : new model loaded" << endl;
 }
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
 {
-  if(!mbInitialised)
-    {
+  if(!mbInitialised)  {
       Init();
       Reset();
+
+      // Init the auxiliary renderer, and bound it to the existing window
+      // TODO
+      target_model.init();
     };
   
   mnCounter++;
@@ -71,7 +80,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
                   imFrame.data());
   
   // Set up rendering to go the FBO, draw undistorted video frame into BG
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,mnFrameBuffer);
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mnFrameBuffer);
   CheckFramebufferStatus();
   glViewport(0,0,mirFBSize.x,mirFBSize.y);
   DrawFBBackGround();
@@ -88,8 +97,9 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame, SE3<> se3CfromW)
   DrawFadingGrid();
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
-  if (assetsLoaded)
-    assetModel->draw(se3CfromW.inverse().get_translation());
+  // TODO :
+  // Do the drawing from the Assimp renderer
+  // Bound the framebuffers..
 
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

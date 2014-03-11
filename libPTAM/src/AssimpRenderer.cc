@@ -28,6 +28,10 @@
 
 #include "AssimpRenderer.h"
 
+static inline float DegToRad(float degrees) {
+  return (float)(degrees * (M_PI / 180.0f));
+}
+
 AssimpRenderer::AssimpRenderer() {
   // Vertex Attribute Locations
   vertexLoc=0;
@@ -43,13 +47,9 @@ AssimpRenderer::AssimpRenderer() {
   //always be texture unit 0
   texUnit = 0;
 
-
-  // Shader Names
-  vertexFileName = "dirlightdiffambpix.vert";
-  fragmentFileName = "dirlightdiffambpix.frag";
-
   // the global Assimp scene object
   scene = NULL;
+  b_loaded_assets = false;
 
   // Camera Position
   camX = 0, camY = 0, camZ = 5;
@@ -62,20 +62,20 @@ AssimpRenderer::AssimpRenderer() {
   timebase = 0,frame = 0;
 }
 
-int AssimpRenderer::printOglError(char *file,
-                                  int line)
+AssimpRenderer::~AssimpRenderer()
 {
-  GLenum glErr;
-  int    retCode = 0;
+  // cleaning up
+  textureIdMap.clear();
 
-  glErr = glGetError();
-  if (glErr != GL_NO_ERROR)
-  {
-    printf("glError in file %s @ line %d: %s\n",
-           file, line, gluErrorString(glErr));
-    retCode = 1;
-  }
-  return retCode;
+  // clear myMeshes stuff
+  for (unsigned int i = 0; i < myMeshes.size(); ++i) {
+
+    glDeleteVertexArrays(1,&(myMeshes[i].vao));
+    glDeleteTextures(1,&(myMeshes[i].texIndex));
+    glDeleteBuffers(1,&(myMeshes[i].uniformBlockIndex));
+    }
+  // delete buffers
+  glDeleteBuffers(1,&matricesUniBuffer);
 }
 
 void AssimpRenderer::crossProduct( float *a, float *b, float *res) {
@@ -95,10 +95,8 @@ void AssimpRenderer::normalize(float *a) {
   a[2] /= mag;
 }
 
-
 // ----------------------------------------------------
 // MATRIX STUFF
-//
 void AssimpRenderer::pushMatrix() {
   float *aux = (float *)malloc(sizeof(float) * 16);
   memcpy(aux, modelMatrix, sizeof(float) * 16);
@@ -128,15 +126,14 @@ void AssimpRenderer::setIdentityMatrix( float *mat,
 void AssimpRenderer::multMatrix(float *a,
                                 float *b) {
   float res[16];
-
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
       res[j*4 + i] = 0.0f;
       for (int k = 0; k < 4; ++k) {
         res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
+        }
       }
     }
-  }
   memcpy(a, res, 16 * sizeof(float));
 }
 
@@ -157,7 +154,6 @@ void AssimpRenderer::setScaleMatrix(float *mat,
                                     float sx,
                                     float sy,
                                     float sz) {
-
   setIdentityMatrix(mat,4);
   mat[0] = sx;
   mat[5] = sy;
@@ -166,8 +162,8 @@ void AssimpRenderer::setScaleMatrix(float *mat,
 
 // Defines a transformation matrix mat with a rotation
 // angle alpha and a rotation axis (x,y,z)
-void AssimpRenderer::setRotationMatrix(float *mat, float angle, float x, float y, float z) {
-
+void AssimpRenderer::setRotationMatrix(float *mat, float angle,
+                                       float x, float y, float z) {
   float radAngle = DegToRad(angle);
   float co = cos(radAngle);
   float si = sin(radAngle);
@@ -194,57 +190,76 @@ void AssimpRenderer::setRotationMatrix(float *mat, float angle, float x, float y
   mat[7] = 0.0f;
   mat[11]= 0.0f;
   mat[15]= 1.0f;
-
 }
 
-// ----------------------------------------------------
-// Model Matrix
+// MODEL MATRIX
 //
-// Copies the modelMatrix to the uniform buffer
 void AssimpRenderer::setModelMatrix() {
-
   glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
   glBufferSubData(GL_UNIFORM_BUFFER,
                   ModelMatrixOffset, MatrixSize, modelMatrix);
   glBindBuffer(GL_UNIFORM_BUFFER,0);
-
 }
 
-// The equivalent to glTranslate applied to the model matrix
 void AssimpRenderer::translate(float x, float y, float z) {
-
   float aux[16];
-
   setTranslationMatrix(aux,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();
 }
 
-// The equivalent to glRotate applied to the model matrix
 void AssimpRenderer::rotate(float angle, float x, float y, float z) {
-
   float aux[16];
-
   setRotationMatrix(aux,angle,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();
 }
 
-// The equivalent to glScale applied to the model matrix
 void AssimpRenderer::scale(float x, float y, float z) {
-
   float aux[16];
-
   setScaleMatrix(aux,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();
 }
 
-// ----------------------------------------------------
-// Projection Matrix
-//
-// Computes the projection Matrix and stores it in the uniform buffer
+void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
+                                                aiVector3D* min,
+                                                aiVector3D* max)  {
+  aiMatrix4x4 prev;
+  unsigned int n = 0, t;
 
+  for (; n < nd->mNumMeshes; ++n) {
+    const aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+    for (t = 0; t < mesh->mNumVertices; ++t) {
+
+      aiVector3D tmp = mesh->mVertices[t];
+
+      min->x = aisgl_min(min->x,tmp.x);
+      min->y = aisgl_min(min->y,tmp.y);
+      min->z = aisgl_min(min->z,tmp.z);
+
+      max->x = aisgl_max(max->x,tmp.x);
+      max->y = aisgl_max(max->y,tmp.y);
+      max->z = aisgl_max(max->z,tmp.z);
+      }
+    }
+
+  for (n = 0; n < nd->mNumChildren; ++n) {
+    get_bounding_box_for_node(nd->mChildren[n],min,max);
+    }
+}
+
+
+void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max)
+{
+  min->x = min->y = min->z =  1e10f;
+  max->x = max->y = max->z = -1e10f;
+  get_bounding_box_for_node(scene->mRootNode,min,max);
+}
+
+
+// SETUP
+//
 void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, float farp) {
 
   float projMatrix[16];
@@ -263,18 +278,7 @@ void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, 
   glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
   glBufferSubData(GL_UNIFORM_BUFFER, ProjMatrixOffset, MatrixSize, projMatrix);
   glBindBuffer(GL_UNIFORM_BUFFER,0);
-
 }
-
-
-// ----------------------------------------------------
-// View Matrix
-//
-// Computes the viewMatrix and stores it in the uniform buffer
-//
-// note: it assumes the camera is not tilted,
-// i.e. a vertical up vector along the Y axis (remember gluLookAt?)
-//
 
 void AssimpRenderer::setCamera(float posX, float posY, float posZ,
                                float lookAtX, float lookAtY, float lookAtZ) {
@@ -325,71 +329,31 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
+bool AssimpRenderer::Import3DFromFile(const std::string& pFile) {
 
-
-
-// ----------------------------------------------------------------------------
-
-void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
-                                                aiVector3D* min,
-                                                aiVector3D* max)
-
-{
-  aiMatrix4x4 prev;
-  unsigned int n = 0, t;
-
-  for (; n < nd->mNumMeshes; ++n) {
-    const aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
-    for (t = 0; t < mesh->mNumVertices; ++t) {
-
-      aiVector3D tmp = mesh->mVertices[t];
-
-      min->x = aisgl_min(min->x,tmp.x);
-      min->y = aisgl_min(min->y,tmp.y);
-      min->z = aisgl_min(min->z,tmp.z);
-
-      max->x = aisgl_max(max->x,tmp.x);
-      max->y = aisgl_max(max->y,tmp.y);
-      max->z = aisgl_max(max->z,tmp.z);
-    }
-  }
-
-  for (n = 0; n < nd->mNumChildren; ++n) {
-    get_bounding_box_for_node(nd->mChildren[n],min,max);
-  }
-}
-
-
-void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max)
-{
-
-  min->x = min->y = min->z =  1e10f;
-  max->x = max->y = max->z = -1e10f;
-  get_bounding_box_for_node(scene->mRootNode,min,max);
-}
-
-bool AssimpRenderer::Import3DFromFile(const std::string& pFile)
-{
+  if (b_loaded_assets)
+    cout << "Assimp : loading a new model over existing assets" << endl;
 
   //check if file exists
   std::ifstream fin(pFile.c_str());
   if(!fin.fail()) {
     fin.close();
-  }
+    }
   else{
     printf("Couldn't open file: %s\n", pFile.c_str());
     printf("%s\n", importer.GetErrorString());
     return false;
-  }
+    }
 
+  // Import the scene using Assimp C++ API
   scene = importer.ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
 
   // If the import failed, report it
   if( !scene)
-  {
+    {
     printf("%s\n", importer.GetErrorString());
     return false;
-  }
+    }
 
   // Now we can access the file's contents.
   printf("Import of scene %s succeeded.",pFile.c_str());
@@ -403,9 +367,9 @@ bool AssimpRenderer::Import3DFromFile(const std::string& pFile)
   scaleFactor = 1.f / tmp;
 
   // We're done. Everything will be cleaned up by the importer destructor
+  b_loaded_assets = true;
   return true;
 }
-
 
 int AssimpRenderer::LoadGLTextures(const aiScene* scene)
 {
@@ -416,7 +380,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
 
   /* scan scene's materials for textures */
   for (unsigned int m=0; m<scene->mNumMaterials; ++m)
-  {
+    {
     int texIndex = 0;
     aiString path;	// filename
 
@@ -427,8 +391,8 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
       // more textures?
       texIndex++;
       texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+      }
     }
-  }
 
   int numTextures = textureIdMap.size();
 
@@ -444,7 +408,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   std::map<std::string, GLuint>::iterator itr = textureIdMap.begin();
   int i=0;
   for (; itr != textureIdMap.end(); ++i, ++itr)
-  {
+    {
     //save IL image ID
     std::string filename = (*itr).first;  // get filename
     (*itr).second = textureIds[i];	  // save texture id for filename in map
@@ -465,10 +429,10 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH),
                    ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE,
                    ilGetData());
-    }
+      }
     else
       printf("Couldn't load Image: %s\n", filename.c_str());
-  }
+    }
   /* Because we have already copied image data into texture data
     we can release memory used by image. */
   ilDeleteImages(numTextures, imageIds);
@@ -481,33 +445,29 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   return true;
 }
 
-void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d)
-{
+void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d) {
   f[0] = a;
   f[1] = b;
   f[2] = c;
   f[3] = d;
 }
 
-void AssimpRenderer::color4_to_float4(const aiColor4D *c, float f[4])
-{
+void AssimpRenderer::color4_to_float4(const aiColor4D *c,
+                                      float f[4]) {
   f[0] = c->r;
   f[1] = c->g;
   f[2] = c->b;
   f[3] = c->a;
 }
 
-
-
 void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
-
   struct MyMesh aMesh;
   struct MyMaterial aMat;
   GLuint buffer;
 
   // For each mesh
   for (unsigned int n = 0; n < sc->mNumMeshes; ++n)
-  {
+    {
     const aiMesh* mesh = sc->mMeshes[n];
 
     // create array with faces
@@ -521,7 +481,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
 
       memcpy(&faceArray[faceIndex], face->mIndices,3 * sizeof(unsigned int));
       faceIndex += 3;
-    }
+      }
     aMesh.numFaces = sc->mMeshes[n]->mNumFaces;
 
     // generate Vertex Array for mesh
@@ -540,7 +500,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mVertices, GL_STATIC_DRAW);
       glEnableVertexAttribArray(vertexLoc);
       glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
-    }
+      }
 
     // buffer for vertex normals
     if (mesh->HasNormals()) {
@@ -549,7 +509,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
       glEnableVertexAttribArray(normalLoc);
       glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
-    }
+      }
 
     // buffer for vertex texture coordinates
     if (mesh->HasTextureCoords(0)) {
@@ -559,13 +519,13 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
         texCoords[k*2]   = mesh->mTextureCoords[0][k].x;
         texCoords[k*2+1] = mesh->mTextureCoords[0][k].y;
 
-      }
+        }
       glGenBuffers(1, &buffer);
       glBindBuffer(GL_ARRAY_BUFFER, buffer);
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*mesh->mNumVertices, texCoords, GL_STATIC_DRAW);
       glEnableVertexAttribArray(texCoordLoc);
       glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
-    }
+      }
 
     // unbind buffers
     glBindVertexArray(0);
@@ -581,7 +541,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       unsigned int texId = textureIdMap[texPath.data];
       aMesh.texIndex = texId;
       aMat.texCount = 1;
-    }
+      }
     else
       aMat.texCount = 0;
 
@@ -620,34 +580,11 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(aMat), (void *)(&aMat), GL_STATIC_DRAW);
 
     myMeshes.push_back(aMesh);
-  }
+    }
 }
 
 
-// ------------------------------------------------------------
-//
-// Reshape Callback Function
-//
-
-void AssimpRenderer::changeSize(int w, int h) {
-
-  float ratio;
-  // Prevent a divide by zero, when window is too short
-  // (you cant make a window of zero width).
-  if(h == 0)
-    h = 1;
-
-  // Set the viewport to be the entire window
-  glViewport(0, 0, w, h);
-
-  ratio = (1.0f * w) / h;
-  buildProjectionMatrix(53.13f, ratio, 0.1f, 100.0f);
-}
-
-
-// ------------------------------------------------------------
-//
-// Render stuff
+// RENDER
 // - render Assimp Model
 void AssimpRenderer::recursive_render (const aiScene *sc,
                                        const aiNode* nd)
@@ -673,12 +610,12 @@ void AssimpRenderer::recursive_render (const aiScene *sc,
     glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
     // draw
     glDrawElements(GL_TRIANGLES,myMeshes[nd->mMeshes[n]].numFaces*3,GL_UNSIGNED_INT,0);
-  }
+    }
 
   // draw all children
   for (unsigned int n=0; n < nd->mNumChildren; ++n){
     recursive_render(sc, nd->mChildren[n]);
-  }
+    }
   popMatrix();
 }
 
@@ -721,87 +658,15 @@ void AssimpRenderer::renderScene(void) {
     timebase = time;
     frame = 0;
     glutSetWindowTitle(s);
-  }
+    }
 
   // swap buffers
   glutSwapBuffers();
-
-  // increase the rotation angle
-  //step++;
 }
 
-
-// ------------------------------------------------------------
+// SHADERS
 //
-// Events from the Keyboard
-//
-
-void AssimpRenderer::processKeys(unsigned char key, int xx, int yy)
-{
-  switch(key) {
-
-    case 27:
-
-      glutLeaveMainLoop();
-      break;
-
-    case 'z': r -= 0.1f; break;
-    case 'x': r += 0.1f; break;
-    case 'm': glEnable(GL_MULTISAMPLE); break;
-    case 'n': glDisable(GL_MULTISAMPLE); break;
-  }
-  camX = r * sin(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-  camZ = r * cos(alpha * 3.14f / 180.0f) * cos(beta * 3.14f / 180.0f);
-  camY = r *   						     sin(beta * 3.14f / 180.0f);
-
-  //  uncomment this if not using an idle func
-  //	glutPostRedisplay();
-}
-
-
-
-// --------------------------------------------------------
-//
-// Shader Stuff
-//
-void AssimpRenderer::printShaderInfoLog(GLuint obj)
-{
-  int infologLength = 0;
-  int charsWritten  = 0;
-  char *infoLog;
-
-  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-  if (infologLength > 0)
-  {
-    infoLog = (char *)malloc(infologLength);
-    glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-    printf("%s\n",infoLog);
-    free(infoLog);
-  }
-}
-
-
-void AssimpRenderer::printProgramInfoLog(GLuint obj)
-{
-  int infologLength = 0;
-  int charsWritten  = 0;
-  char *infoLog;
-
-  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-  if (infologLength > 0)
-  {
-    infoLog = (char *)malloc(infologLength);
-    glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
-    printf("%s\n",infoLog);
-    free(infoLog);
-  }
-}
-
-
 GLuint AssimpRenderer::setupShaders() {
-
   char *vs = NULL,*fs = NULL,*fs2 = NULL;
 
   GLuint p,v,f;
@@ -809,8 +674,11 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
-  vs = textFileRead(vertexFileName);
-  fs = textFileRead(fragmentFileName);
+  std::string vertexShaderFile = "dirlightdiffambpix.vert";
+  std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+
+  vs = textFileRead(vertexShaderFile.c_str());
+  fs = textFileRead(fragmentShaderFile.c_str());
 
   const char * vv = vs;
   const char * ff = fs;
@@ -859,11 +727,22 @@ GLuint AssimpRenderer::setupShaders() {
 //
 int AssimpRenderer::init()
 {
-  if (!Import3DFromFile(modelname))
+  //	Init GLEW
+  glewInit();
+  if (glewIsSupported("GL_VERSION_3_3"))
+    printf("Ready for OpenGL 3.3\n");
+  else {
+    printf("OpenGL 3.3 not supported\n");
+    return(1);
+    }
+
+  // Load a model if needed
+  if ((!b_loaded_assets) && !Import3DFromFile(modelname))
     return(0);
 
-  LoadGLTextures(scene);
+  LoadGLTextures(scene); // scene is defined from the previous Import3DFile
 
+  // Define the OpenGL context :
   glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC) glutGetProcAddress("glGetUniformBlockIndex");
   glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC) glutGetProcAddress("glUniformBlockBinding");
   glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) glutGetProcAddress("glGenVertexArrays");
@@ -904,18 +783,6 @@ int main(int argc, char **argv) {
   glutInitWindowSize(320,320);
 
   glutCreateWindow("Lighthouse3D - Assimp Demo");
-
-  //  Callback Registration
-  glutDisplayFunc(renderScene);
-  glutReshapeFunc(changeSize);
-  glutIdleFunc(renderScene);
-
-  //	Mouse and Keyboard Callbacks
-  glutKeyboardFunc(processKeys);
-  glutMouseFunc(processMouseButtons);
-  glutMotionFunc(processMouseMotion);
-
-  glutMouseWheelFunc ( mouseWheel ) ;
 
   //	Init GLEW
   glewInit();
@@ -960,3 +827,52 @@ int main(int argc, char **argv) {
 };
 */
 
+// -- Print logs.. --
+
+void AssimpRenderer::printShaderInfoLog(GLuint obj)
+{
+  int infologLength = 0, charsWritten  = 0;
+  char *infoLog;
+
+  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+  if (infologLength > 0)
+    {
+    infoLog = (char *)malloc(infologLength);
+    glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+    printf("%s\n",infoLog);
+    free(infoLog);
+    }
+}
+
+int AssimpRenderer::printOglError(char *file,
+                                  int line)
+{
+  GLenum glErr;
+  int    retCode = 0;
+
+  glErr = glGetError();
+  if (glErr != GL_NO_ERROR)
+    {
+    printf("glError in file %s @ line %d: %s\n",
+           file, line, gluErrorString(glErr));
+    retCode = 1;
+    }
+  return retCode;
+}
+
+void AssimpRenderer::printProgramInfoLog(GLuint obj)
+{
+  int infologLength = 0, charsWritten  = 0;
+  char *infoLog;
+
+  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+  if (infologLength > 0)
+    {
+    infoLog = (char *)malloc(infologLength);
+    glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+    printf("%s\n",infoLog);
+    free(infoLog);
+    }
+}
