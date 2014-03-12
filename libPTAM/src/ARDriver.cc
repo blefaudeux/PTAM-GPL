@@ -8,21 +8,26 @@ using namespace std;
 
 static bool CheckFramebufferStatus();
 
-ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw)
+ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
+                   std::string ARSceneFile)
   :mCamera(cam), mGLWindow(glw)
 {
   mirFrameSize = irFrameSize;
   mCamera.SetImageSize(mirFrameSize);
 
-  target_model  = NULL;
+  if (!ARSceneFile.empty())
+    target_model  = new AssimpRenderer(ARSceneFile);
+  else
+    target_model = NULL;
+
   mbInitialised = false;
-  assetsLoaded  = false;
 }
 
 void ARDriver::Init()
 {
   cout << "ARDriver : init" << endl;
-  mbInitialised = true;
+
+  // Init the window, and the GL context
   mirFBSize = GV3::get<ImageRef>("ARDriver.FrameBufferSize", ImageRef(1200,900), SILENT);
   glGenTextures(1, &mnFrameTex);
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB,mnFrameTex);
@@ -36,7 +41,14 @@ void ARDriver::Init()
   mGame.Init();
 
   // Init the Assimp handler
-  target_model = new AssimpRenderer();
+  if (NULL != target_model)
+    if (!target_model->init()) {
+      cout << "ARDriver : could not initialise AssimpRenderer" << endl;
+      delete target_model;
+      target_model = NULL;
+    }
+
+  mbInitialised = true;
   cout << "ARDriver : Init done" << endl;
 }
 
@@ -45,16 +57,18 @@ void ARDriver::Reset()  {
   mnCounter = 0;
 }
 
-void ARDriver::LoadARModel(std::string model_file)
-{
-  if (NULL==target_model) {
-    target_model = new AssimpRenderer();
-    cout << "ARDriver : new renderer created" << endl;
-  }
+//void ARDriver::LoadARModel(std::string model_file)
+//{
+//  if (NULL==target_model) {
+//    target_model = new AssimpRenderer();
+//    cout << "ARDriver : new renderer created" << endl;
+//  }
 
-  target_model->import3DFromFile(model_file);
-  cout << "ARDriver : new model loaded" << endl;
-}
+//  if (target_model->import3DFromFile(model_file))
+//    cout << "ARDriver : new model loaded" << endl;
+//  else
+//    cout << "ARDriver : problem loading new loaded" << endl;
+//}
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
@@ -63,8 +77,11 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
     Reset();
 
     // Init the auxiliary renderer, and bound it to the existing window
-    if (NULL != target_model)
-      target_model->init();
+    if ((NULL != target_model) && (target_model->init())) {
+      cout << "  ARDriver: Could not initialize Assimp renderer" << endl;
+    }
+
+    cout << "  ARDriver: Render initialized" << endl;
   };
   
   mnCounter++;
@@ -97,9 +114,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
   // Call the Assimp renderer to add the loaded 3D model to the scene
-  cout << "ADriver : calling AssimpRenderer" << endl;
-  target_model->renderSceneToFB(1);
-  cout << "ADriver : calling AssimpRenderer" << endl;
+  if (NULL != target_model) target_model->renderSceneToFB();
 
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -121,6 +136,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
 
 void ARDriver::MakeFrameBuffer()
 {
+  cout << "  ARDriver: Creating FBO... " << endl;
   glGenTextures(1, &mnFrameBufferTex);
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB,mnFrameBufferTex);
   glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0,
@@ -130,17 +146,10 @@ void ARDriver::MakeFrameBuffer()
   glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   GLuint DepthBuffer;
-  cout << "  ARDriver: Creating FBO... " << endl;
 
   glGenRenderbuffersEXT(1, &DepthBuffer);
-  cout << "  ARDriver: Creating FBO... " << endl;
-
   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, DepthBuffer);
-  cout << "  ARDriver: Creating FBO... " << endl;
-
   glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, mirFBSize.x, mirFBSize.y);
-
-  cout << "  ARDriver: Creating FBO... " << endl;
 
   glGenFramebuffersEXT(1, &mnFrameBuffer);
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mnFrameBuffer);
@@ -148,11 +157,10 @@ void ARDriver::MakeFrameBuffer()
                             GL_TEXTURE_RECTANGLE_ARB, mnFrameBufferTex, 0);
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
                                GL_RENDERBUFFER_EXT, DepthBuffer);
-  cout << "  ARDriver: Creating FBO... " << endl;
-
   CheckFramebufferStatus();
-  cout << " .. created FBO." << endl;
+
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+  cout << "  ARDriver: FBO.allocated" << endl;
 }
 
 static bool CheckFramebufferStatus()  {

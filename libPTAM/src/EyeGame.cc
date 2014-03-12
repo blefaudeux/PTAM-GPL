@@ -78,8 +78,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
-};
-
+}
 
 void EyeGame::Reset()
 {
@@ -101,8 +100,7 @@ void EyeGame::Reset()
   ase3WorldFromEye[2].get_translation()[2] = mdEyeRadius;
   ase3WorldFromEye[3].get_translation()[2] = mdEyeRadius;
   mnFrameCounter = 0;
-};
-
+}
 
 void EyeGame::DrawEye()
 {
@@ -185,8 +183,8 @@ void EyeGame::Init()
   DrawEye();
   glEndList();
   MakeShadowTex();
-};
-
+  std::cout << "EyeGame: Initialized " << std::endl;
+}
 
 void EyeGame::LookAt(int nEye, Vector<3> v3, double dRotLimit)
 {

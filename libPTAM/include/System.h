@@ -35,7 +35,7 @@ public:
   int   GetCurrentKeyframes();
   int   GetCurrentPoints();
   int   GetDiscardedPoints();
-  bool  LoadARModel(std::string model_file);
+  bool  setARModel(const std::string model_file);
 
 private:
   VideoSource mVideoSource;
@@ -53,7 +53,6 @@ private:
   
   bool mbDone;
   bool ARDriver_initialized;
-  bool ARDriver_load_pending;
   std::string AR_assets_filename;
 
   static void GUICommandCallBack(void* ptr, std::string sCommand, std::string sParams);

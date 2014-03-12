@@ -25,13 +25,16 @@
 
 using namespace std;
 using namespace CVD;
+using namespace GVars3;
 
 class ARDriver
 {
  public:
-  ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw);
+  ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
+           string ARSceneFile = "");
+
   void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld);
-  void LoadARModel(std::string model_file);
+//  void LoadARModel(std::string model_file);
   void Reset();
   void Init();
 
@@ -56,7 +59,6 @@ class ARDriver
   ImageRef mirFrameSize;
   SE3<> mse3;
   bool mbInitialised;
-  bool assetsLoaded;
 
   // Eyeballs:
   EyeGame mGame;

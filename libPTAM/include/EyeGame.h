@@ -11,6 +11,7 @@
 #define __EYEGAME_H
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
+#include <iostream>
 
 using namespace TooN;
 

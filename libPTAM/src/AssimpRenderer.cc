@@ -32,7 +32,7 @@ static inline float DegToRad(float degrees) {
   return (float)(degrees * (M_PI / 180.0f));
 }
 
-AssimpRenderer::AssimpRenderer() {
+AssimpRenderer::AssimpRenderer(const std::string ARSceneFile) {
   // Vertex Attribute Locations
   vertexLoc=0;
   normalLoc=1;
@@ -49,7 +49,6 @@ AssimpRenderer::AssimpRenderer() {
 
   // the global Assimp scene object
   scene = NULL;
-  b_loaded_assets = false;
 
   // Camera Position
   camX = 0, camY = 0, camZ = 5;
@@ -60,6 +59,10 @@ AssimpRenderer::AssimpRenderer() {
 
   // Frame counting and FPS computation
   timebase = 0,frame = 0;
+
+  // Set the object to load :
+  modelname = ARSceneFile;
+  importer = new Assimp::Importer();
 }
 
 AssimpRenderer::~AssimpRenderer()
@@ -73,7 +76,7 @@ AssimpRenderer::~AssimpRenderer()
     glDeleteVertexArrays(1,&(myMeshes[i].vao));
     glDeleteTextures(1,&(myMeshes[i].texIndex));
     glDeleteBuffers(1,&(myMeshes[i].uniformBlockIndex));
-    }
+  }
   // delete buffers
   glDeleteBuffers(1,&matricesUniBuffer);
 }
@@ -131,9 +134,9 @@ void AssimpRenderer::multMatrix(float *a,
       res[j*4 + i] = 0.0f;
       for (int k = 0; k < 4; ++k) {
         res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
-        }
       }
     }
+  }
   memcpy(a, res, 16 * sizeof(float));
 }
 
@@ -241,12 +244,12 @@ void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
       max->x = aisgl_max(max->x,tmp.x);
       max->y = aisgl_max(max->y,tmp.y);
       max->z = aisgl_max(max->z,tmp.z);
-      }
     }
+  }
 
   for (n = 0; n < nd->mNumChildren; ++n) {
     get_bounding_box_for_node(nd->mChildren[n],min,max);
-    }
+  }
 }
 
 
@@ -331,41 +334,37 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
 
 bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
 
-  if (b_loaded_assets)
-    cout << "Assimp : loading a new model over existing assets" << endl;
-
   //check if file exists
   std::ifstream fin(pFile.c_str());
   if(!fin.fail()) {
     fin.close();
   } else{
-    printf("Couldn't open file: %s\n", pFile.c_str());
-    printf("%s\n", importer.GetErrorString());
+    cout << "Couldn't open file: "<< pFile.c_str() << endl;
+    cout << importer->GetErrorString() << endl;
     return false;
   }
 
   // Import the scene using Assimp C++ API
-  scene = importer.ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+  cout << "AssimpRenderer : Scene " << pFile << " import is OK" << endl;
 
   // If the import failed, report it
   if( !scene) {
-    printf("%s\n", importer.GetErrorString());
+    cout << importer->GetErrorString() << endl;
     return false;
-    }
+  }
 
   // Now we can access the file's contents.
-  printf("Import of scene %s succeeded.",pFile.c_str());
-
-  aiVector3D scene_min, scene_max, scene_center;
+  aiVector3D scene_min, scene_max;
   get_bounding_box(&scene_min, &scene_max);
   float tmp;
   tmp = scene_max.x-scene_min.x;
+  cout << "AssimpRenderer : Model scale " << tmp << endl;
   tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
   tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
   scaleFactor = 1.f / tmp;
 
   // We're done. Everything will be cleaned up by the importer destructor
-  b_loaded_assets = true;
   return true;
 }
 
@@ -378,7 +377,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
 
   /* scan scene's materials for textures */
   for (unsigned int m=0; m<scene->mNumMaterials; ++m)
-    {
+  {
     int texIndex = 0;
     aiString path;	// filename
 
@@ -389,8 +388,8 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
       // more textures?
       texIndex++;
       texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-      }
     }
+  }
 
   int numTextures = textureIdMap.size();
 
@@ -406,7 +405,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   std::map<std::string, GLuint>::iterator itr = textureIdMap.begin();
   int i=0;
   for (; itr != textureIdMap.end(); ++i, ++itr)
-    {
+  {
     //save IL image ID
     std::string filename = (*itr).first;  // get filename
     (*itr).second = textureIds[i];	  // save texture id for filename in map
@@ -427,10 +426,10 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH),
                    ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE,
                    ilGetData());
-      }
+    }
     else
       printf("Couldn't load Image: %s\n", filename.c_str());
-    }
+  }
   /* Because we have already copied image data into texture data
     we can release memory used by image. */
   ilDeleteImages(numTextures, imageIds);
@@ -465,7 +464,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
 
   // For each mesh
   for (unsigned int n = 0; n < sc->mNumMeshes; ++n)
-    {
+  {
     const aiMesh* mesh = sc->mMeshes[n];
 
     // create array with faces
@@ -479,7 +478,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
 
       memcpy(&faceArray[faceIndex], face->mIndices,3 * sizeof(unsigned int));
       faceIndex += 3;
-      }
+    }
     aMesh.numFaces = sc->mMeshes[n]->mNumFaces;
 
     // generate Vertex Array for mesh
@@ -498,7 +497,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mVertices, GL_STATIC_DRAW);
       glEnableVertexAttribArray(vertexLoc);
       glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
-      }
+    }
 
     // buffer for vertex normals
     if (mesh->HasNormals()) {
@@ -507,7 +506,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
       glEnableVertexAttribArray(normalLoc);
       glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
-      }
+    }
 
     // buffer for vertex texture coordinates
     if (mesh->HasTextureCoords(0)) {
@@ -517,13 +516,13 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
         texCoords[k*2]   = mesh->mTextureCoords[0][k].x;
         texCoords[k*2+1] = mesh->mTextureCoords[0][k].y;
 
-        }
+      }
       glGenBuffers(1, &buffer);
       glBindBuffer(GL_ARRAY_BUFFER, buffer);
       glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*mesh->mNumVertices, texCoords, GL_STATIC_DRAW);
       glEnableVertexAttribArray(texCoordLoc);
       glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
-      }
+    }
 
     // unbind buffers
     glBindVertexArray(0);
@@ -539,7 +538,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       unsigned int texId = textureIdMap[texPath.data];
       aMesh.texIndex = texId;
       aMat.texCount = 1;
-      }
+    }
     else
       aMat.texCount = 0;
 
@@ -578,7 +577,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(aMat), (void *)(&aMat), GL_STATIC_DRAW);
 
     myMeshes.push_back(aMesh);
-    }
+  }
 }
 
 
@@ -609,12 +608,12 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
     glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
     // draw
     glDrawElements(GL_TRIANGLES,myMeshes[nd->mMeshes[n]].numFaces*3,GL_UNSIGNED_INT,0);
-    }
+  }
 
   // draw all children
   for (unsigned int n=0; n < nd->mNumChildren; ++n){
     recursiveRender(sc, nd->mChildren[n]);
-    }
+  }
   popMatrix();
 }
 
@@ -657,21 +656,13 @@ void AssimpRenderer::renderScene(void) {
     timebase = time;
     frame = 0;
     glutSetWindowTitle(s);
-    }
+  }
 
   // swap buffers
   glutSwapBuffers();
 }
 
-void AssimpRenderer::renderSceneToFB(GLint fb) {
-//  // set camera matrix
-//  setCamera(camX,camY,camZ,0,0,0);
-
-//  // set the model matrix to the identity Matrix
-//  setIdentityMatrix(modelMatrix,4);
-
-//  // sets the model matrix to a scale matrix so that the model fits in the window
-//  scale(scaleFactor, scaleFactor, scaleFactor);
+void AssimpRenderer::renderSceneToFB(void) {
 
   // use our shader
   glUseProgram(program);
@@ -681,7 +672,13 @@ void AssimpRenderer::renderSceneToFB(GLint fb) {
   // so we have set this uniform separately
   glUniform1i(texUnit,0);
 
-//  recursiveRender(scene, scene->mRootNode);
+  if (NULL != scene) {
+    cout << "AssimpRenderer: Recursive rendering started" << endl;
+//    recursiveRender(scene, scene->mRootNode); // FIXME : crash when we use this..
+    cout << "AssimpRenderer: Recursive rendering ended" << endl;
+  } else {
+    cout << "AssimpRenderer: no model to display" << endl;
+  }
 }
 
 // SHADERS
@@ -738,6 +735,7 @@ GLuint AssimpRenderer::setupShaders() {
 
   texUnit = glGetUniformLocation(p,"texUnit");
 
+  cout << "AssimpRenderer: Shaders loaded"  << endl;
   return(p);
 }
 
@@ -745,31 +743,18 @@ GLuint AssimpRenderer::setupShaders() {
 //
 // Model loading and OpenGL setup
 //
-int AssimpRenderer::init()
+bool AssimpRenderer::init()
 {
-  cout << "AssimpRenderer : init" << endl;
-
-  glewInit();
-  if (glewIsSupported("GL_VERSION_3_3"))
-    printf("Ready for OpenGL 3.3\n");
-  else {
-    printf("OpenGL 3.3 not supported\n");
-    return(1);
-    }
-
   // Load a model if needed
-  if ((!b_loaded_assets) && !import3DFromFile(modelname))
-    return(0);
+  if (modelname.empty()) {
+    cout << "AssimpRenderer: No model defined, quitting" << endl;
+    return false;
+  }
+
+  this->import3DFromFile(modelname);
 
   LoadGLTextures(scene); // scene is defined from the previous Import3DFile
-
-  // Define the OpenGL context :
-  glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC) glutGetProcAddress("glGetUniformBlockIndex");
-  glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC) glutGetProcAddress("glUniformBlockBinding");
-  glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) glutGetProcAddress("glGenVertexArrays");
-  glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glutGetProcAddress("glBindVertexArray");
-  glBindBufferRange = (PFNGLBINDBUFFERRANGEPROC) glutGetProcAddress("glBindBufferRange");
-  glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) glutGetProcAddress("glDeleteVertexArrays");
+  cout << "AssimpRenderer: GL textures loaded" << endl;
 
   program = setupShaders();
   genVAOsAndUniformBuffer(scene);
@@ -777,17 +762,64 @@ int AssimpRenderer::init()
   glEnable(GL_DEPTH_TEST);
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
-  //
-  // Uniform Block
-  //
   glGenBuffers(1,&matricesUniBuffer);
   glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
   glBufferData(GL_UNIFORM_BUFFER, MatricesUniBufferSize,NULL,GL_DYNAMIC_DRAW);
   glBindBufferRange(GL_UNIFORM_BUFFER, matricesUniLoc, matricesUniBuffer, 0, MatricesUniBufferSize);	//setUniforms();
   glBindBuffer(GL_UNIFORM_BUFFER,0);
-
   glEnable(GL_MULTISAMPLE);
+
+  cout << "AssimpRenderer: Initialized" << endl;
   return true;
+}
+
+// -- Print logs.. --
+void AssimpRenderer::printShaderInfoLog(GLuint obj)
+{
+  int infologLength = 0, charsWritten  = 0;
+  char *infoLog;
+
+  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+  if (infologLength > 0)
+  {
+    infoLog = (char *)malloc(infologLength);
+    glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
+    printf("%s\n",infoLog);
+    free(infoLog);
+  }
+}
+
+int AssimpRenderer::printOglError(char *file,
+                                  int line)
+{
+  GLenum glErr;
+  int    retCode = 0;
+
+  glErr = glGetError();
+  if (glErr != GL_NO_ERROR)
+  {
+    printf("glError in file %s @ line %d: %s\n",
+           file, line, gluErrorString(glErr));
+    retCode = 1;
+  }
+  return retCode;
+}
+
+void AssimpRenderer::printProgramInfoLog(GLuint obj)
+{
+  int infologLength = 0, charsWritten  = 0;
+  char *infoLog;
+
+  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+
+  if (infologLength > 0)
+  {
+    infoLog = (char *)malloc(infologLength);
+    glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
+    printf("%s\n",infoLog);
+    free(infoLog);
+  }
 }
 
 // ------------------------------------------------------------
@@ -847,53 +879,3 @@ int main(int argc, char **argv) {
 }
 };
 */
-
-// -- Print logs.. --
-
-void AssimpRenderer::printShaderInfoLog(GLuint obj)
-{
-  int infologLength = 0, charsWritten  = 0;
-  char *infoLog;
-
-  glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-  if (infologLength > 0)
-    {
-    infoLog = (char *)malloc(infologLength);
-    glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-    printf("%s\n",infoLog);
-    free(infoLog);
-    }
-}
-
-int AssimpRenderer::printOglError(char *file,
-                                  int line)
-{
-  GLenum glErr;
-  int    retCode = 0;
-
-  glErr = glGetError();
-  if (glErr != GL_NO_ERROR)
-    {
-    printf("glError in file %s @ line %d: %s\n",
-           file, line, gluErrorString(glErr));
-    retCode = 1;
-    }
-  return retCode;
-}
-
-void AssimpRenderer::printProgramInfoLog(GLuint obj)
-{
-  int infologLength = 0, charsWritten  = 0;
-  char *infoLog;
-
-  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-  if (infologLength > 0)
-    {
-    infoLog = (char *)malloc(infologLength);
-    glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
-    printf("%s\n",infoLog);
-    free(infoLog);
-    }
-}

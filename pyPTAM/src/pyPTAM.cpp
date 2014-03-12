@@ -62,7 +62,7 @@ public :
     // Load the assets if needed
     if (!AR_assets_file.empty()) {
         cout << "Deferred loading taking place" << endl;
-        s->LoadARModel(AR_assets_file);
+        s->setARModel(AR_assets_file);
       }
 
     // Start the computations
@@ -135,7 +135,7 @@ public :
         AR_assets_file = model_file;
       } else {
         cout << "Loading AR Model" << endl;
-        s->LoadARModel(model_file);
+        s->setARModel(model_file);
         cout << "Model loaded" << endl;
       }
   }

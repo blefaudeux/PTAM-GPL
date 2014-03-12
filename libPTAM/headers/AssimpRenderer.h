@@ -95,7 +95,7 @@ struct MyMaterial{
 
 class AssimpRenderer {
 public :
-  AssimpRenderer();
+  AssimpRenderer(const std::string ARSceneFile);
   ~AssimpRenderer();
 
   // Support functions :
@@ -133,15 +133,14 @@ public :
   static void color4_to_float4(const aiColor4D *c, float f[4]);
 
   bool  import3DFromFile( const string& pFile);
-  int   init();
+  bool  init();
 
   // - render in an external FB
-  void renderSceneToFB(GLint fb);
+  void  renderSceneToFB(void);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
   float modelMatrix[16];
-  bool b_loaded_assets;
 
   // For push and pop matrix
   vector<float *> matrixStack;
@@ -169,7 +168,7 @@ private:
   GLuint program, vertexShader, fragmentShader;
 
   // Create an instance of the Importer class
-  Assimp::Importer importer;
+  Assimp::Importer *importer;
 
   // the global Assimp scene object
   const aiScene* scene;

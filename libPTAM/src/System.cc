@@ -12,7 +12,6 @@ using namespace CVD;
 using namespace std;
 using namespace GVars3;
 
-
 System::System()
   : mGLWindow(mVideoSource.Size(), "PTAM")
 {
@@ -30,12 +29,12 @@ System::System()
   Vector<2> v2;
   if(v2==v2) ;
   if(vTest == ATANCamera::mvDefaultParams)
-    {
-      cout << endl;
-      cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
-      cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
-      exit(1);
-    }
+  {
+    cout << endl;
+    cout << "! Camera.Parameters is not set, need to run the CameraCalibrator tool" << endl;
+    cout << "  and/or put the Camera.Parameters= line into the appropriate .cfg file." << endl;
+    exit(1);
+  }
   
   mpMap = new Map;
   mpMapMaker = new MapMaker(*mpMap, *mpCamera);
@@ -52,19 +51,11 @@ System::System()
   
   mbDone = false;
   ARDriver_initialized = false;
-  ARDriver_load_pending = false;
+  AR_assets_filename = "";
 }
 
-bool System::LoadARModel(std::string model_file) {
-  if (ARDriver_initialized) {
-      cout << "System : load AR model" << endl;
-      this->mpARDriver->LoadARModel(model_file);
-      cout << "Done" << endl;
-    } else {
-      cout << "System : AR not allocated yet, deferred loading" << endl;
-      AR_assets_filename = model_file;
-      ARDriver_load_pending = true;
-    }
+bool System::setARModel(const string model_file) {
+  AR_assets_filename = model_file;
 }
 
 /*!
@@ -75,62 +66,57 @@ bool System::LoadARModel(std::string model_file) {
 void System::Run()
 {
   if (!ARDriver_initialized) {
-      // Initialize all the graphics here, so that it can be moved to a
-      // seperate thread
-      mpMapViewer = new MapViewer(*mpMap, mGLWindow);
-      mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow);
-      cout << "Init" << endl;
-      mpARDriver->Init();
-
-      if (ARDriver_load_pending) {
-          cout << "Loading assets" << endl;
-          mpARDriver->LoadARModel(AR_assets_filename);
-        }
-
-      ARDriver_initialized = true;
-    }
+    // Initialize all the graphics here, so that it can be moved to a
+    // seperate thread
+    mpMapViewer = new MapViewer(*mpMap, mGLWindow);
+    mpARDriver = new ARDriver(*mpCamera, mVideoSource.Size(), mGLWindow, AR_assets_filename);
+    mpARDriver->Init();
+    ARDriver_initialized = true;
+  }
 
   while(!mbDone)
-    {
-      // We use two versions of each video frame:
-      // One black and white (for processing by the tracker etc)
-      // and one RGB, for drawing.
+  {
+    // We use two versions of each video frame:
+    // One black and white (for processing by the tracker etc)
+    // and one RGB, for drawing.
 
-      // Grab new video frame...
-      mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);
+    // Grab new video frame...
+    mVideoSource.GetAndFillFrameBWandRGB(mimFrameBW, mimFrameRGB);
 
-      mGLWindow.SetupViewport();
-      mGLWindow.SetupVideoOrtho();
-      mGLWindow.SetupVideoRasterPosAndZoom();
+    mGLWindow.SetupViewport();
+    mGLWindow.SetupVideoOrtho();
+    mGLWindow.SetupVideoRasterPosAndZoom();
 
-      if(!mpMap->IsGood())
-        mpARDriver->Reset();
+    if(!mpMap->IsGood())
+      mpARDriver->Reset();
 
-      static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
-      static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
+    static gvar3<int> gvnDrawMap("DrawMap", 0, HIDDEN|SILENT);
+    static gvar3<int> gvnDrawAR("DrawAR", 0, HIDDEN|SILENT);
 
-      bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
-      bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
+    bool bDrawMap = mpMap->IsGood() && *gvnDrawMap;
+    bool bDrawAR = mpMap->IsGood() && *gvnDrawAR;
 
-      mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
+    // Update the camera pose and map (SLAM)
+    mpTracker->TrackFrame(mimFrameBW, !bDrawAR && !bDrawMap);
 
-      if(bDrawMap)
-        mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
-      else if(bDrawAR)
-        mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
+    // Rendering : either the 3D view or AR
+    if(bDrawMap)
+      mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
+    else if(bDrawAR)
+      mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
 
-      //  mGLWindow.GetMousePoseUpdate();
-      string sCaption;
-      if(bDrawMap)
-        sCaption = mpMapViewer->GetMessageForUser();
-      else
-        sCaption = mpTracker->GetMessageForUser();
+    // Draw the menu and captions
+    string sCaption;
+    if(bDrawMap)
+      sCaption = mpMapViewer->GetMessageForUser();
+    else
+      sCaption = mpTracker->GetMessageForUser();
 
-      mGLWindow.DrawCaption(sCaption);
-      mGLWindow.DrawMenus();
-      mGLWindow.swap_buffers();
-      mGLWindow.HandlePendingEvents();
-    }
+    mGLWindow.DrawCaption(sCaption); // FIXME: Crash here when AssimpRenderer have been used
+    mGLWindow.DrawMenus();
+    mGLWindow.swap_buffers();
+    mGLWindow.HandlePendingEvents();
+  }
 
   cout << "Ending PTAM run" << endl;
 }
@@ -163,15 +149,15 @@ void System::GetCurrentPose(double *pose) const {
 
   // We output the multiplexed values in a single array
   for (int i=0; i<3; ++i) {
-      pose[i] = translation[i];
-    }
+    pose[i] = translation[i];
+  }
 
   // A bit stupid, fast hack to see if the values are usable
   for (int i=0; i<3; ++i) {
-      for (int j=0; j<3; ++j) {
-          pose[3 + 3*i + j] = rotation(i,j);
-        }
+    for (int j=0; j<3; ++j) {
+      pose[3 + 3*i + j] = rotation(i,j);
     }
+  }
 }
 
 int System::GetCurrentKeyframes() {
