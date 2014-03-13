@@ -98,8 +98,7 @@ void AssimpRenderer::normalize(float *a) {
   a[2] /= mag;
 }
 
-// ----------------------------------------------------
-// MATRIX STUFF
+// Handle the matrix stack (modelview)
 void AssimpRenderer::pushMatrix() {
   float *aux = (float *)malloc(sizeof(float) * 16);
   memcpy(aux, modelMatrix, sizeof(float) * 16);
@@ -113,8 +112,6 @@ void AssimpRenderer::popMatrix() {
   free(m);
 }
 
-// sets the square matrix mat to the identity matrix,
-// size refers to the number of rows (or columns)
 void AssimpRenderer::setIdentityMatrix( float *mat,
                                         int size) {
   // fill matrix with 0s
@@ -126,6 +123,7 @@ void AssimpRenderer::setIdentityMatrix( float *mat,
     mat[i + i * size] = 1.0f;
 }
 
+// Not quite optimal... recode with GLM lib ?
 void AssimpRenderer::multMatrix(float *a,
                                 float *b) {
   float res[16];
@@ -139,7 +137,6 @@ void AssimpRenderer::multMatrix(float *a,
   }
   memcpy(a, res, 16 * sizeof(float));
 }
-
 
 // Defines a transformation matrix mat with a translation
 void AssimpRenderer::setTranslationMatrix(float *mat,
@@ -260,9 +257,7 @@ void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max)
   get_bounding_box_for_node(scene->mRootNode,min,max);
 }
 
-
-// SETUP
-//
+// Setup
 void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, float farp) {
 
   float projMatrix[16];
@@ -332,6 +327,7 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
+// Parse the Model file
 bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
 
   //check if file exists
@@ -595,7 +591,7 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
   float aux[16];
   memcpy(aux,&m,sizeof(float) * 16);
   multMatrix(modelMatrix, aux);
-  setModelMatrix();
+  setModelMatrix(); // FIXME : we call a faulty buffer in there !
 
   // draw all meshes assigned to this node
   for (unsigned int n=0; n < nd->mNumMeshes; ++n){
@@ -604,8 +600,10 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
                       myMeshes[nd->mMeshes[n]].uniformBlockIndex, 0, sizeof(struct MyMaterial));
     // bind texture
     glBindTexture(GL_TEXTURE_2D, myMeshes[nd->mMeshes[n]].texIndex);
+
     // bind VAO
-    glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
+    glBindVertexArray(myMeshes[nd->mMeshes[n]].vao); // crash in there
+
     // draw
     glDrawElements(GL_TRIANGLES,myMeshes[nd->mMeshes[n]].numFaces*3,GL_UNSIGNED_INT,0);
   }
@@ -662,23 +660,28 @@ void AssimpRenderer::renderScene(void) {
   glutSwapBuffers();
 }
 
-void AssimpRenderer::renderSceneToFB(void) {
+void AssimpRenderer::renderSceneToFB(GLuint &framebuffer) {
 
-  // use our shader
+  // Use our shader
   glUseProgram(program);
 
-  // we are only going to use texture unit 0
+  // We are only going to use texture unit 0
   // unfortunately samplers can't reside in uniform blocks
   // so we have set this uniform separately
   glUniform1i(texUnit,0);
 
   if (NULL != scene) {
     cout << "AssimpRenderer: Recursive rendering started" << endl;
-//    recursiveRender(scene, scene->mRootNode); // FIXME : crash when we use this..
+    recursiveRender(scene, scene->mRootNode); // FIXME : crash when we use this..
     cout << "AssimpRenderer: Recursive rendering ended" << endl;
   } else {
     cout << "AssimpRenderer: no model to display" << endl;
   }
+
+  // Stop using the shaders
+  glUseProgram(0);
+
+  glBindVertexArray(0);
 }
 
 // SHADERS
@@ -691,8 +694,8 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
-  std::string vertexShaderFile = "dirlightdiffambpix.vert";
-  std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
+  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());
@@ -703,13 +706,19 @@ GLuint AssimpRenderer::setupShaders() {
   glShaderSource(v, 1, &vv,NULL);
   glShaderSource(f, 1, &ff,NULL);
 
-  free(vs);free(fs);
+  free(vs);
+  free(fs);
 
   glCompileShader(v);
-  glCompileShader(f);
+  printOglError("AssimpRenderer", 711);
 
+  glCompileShader(f);
+  printOglError("AssimpRenderer", 714);
+
+  cout << "Shader info : " << endl;
   printShaderInfoLog(v);
   printShaderInfoLog(f);
+  cout << "-----" << endl;
 
   p = glCreateProgram();
   glAttachShader(p,v);
@@ -753,11 +762,18 @@ bool AssimpRenderer::init()
 
   this->import3DFromFile(modelname);
 
-  LoadGLTextures(scene); // scene is defined from the previous Import3DFile
+  LoadGLTextures(scene); // scene is already defined from the previous Import3DFile
   cout << "AssimpRenderer: GL textures loaded" << endl;
 
+  //	glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC) glutGetProcAddress("glGetUniformBlockIndex");
+  //	glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC) glutGetProcAddress("glUniformBlockBinding");
+  //	glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) glutGetProcAddress("glGenVertexArrays");
+  //	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glutGetProcAddress("glBindVertexArray");
+  //	glBindBufferRange = (PFNGLBINDBUFFERRANGEPROC) glutGetProcAddress("glBindBufferRange");
+  //	glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) glutGetProcAddress("glDeleteVertexArrays");
+
   program = setupShaders();
-  genVAOsAndUniformBuffer(scene);
+  genVAOsAndUniformBuffer(scene); // Generate Vertex Arrays Objects and buffers
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
@@ -765,7 +781,7 @@ bool AssimpRenderer::init()
   glGenBuffers(1,&matricesUniBuffer);
   glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
   glBufferData(GL_UNIFORM_BUFFER, MatricesUniBufferSize,NULL,GL_DYNAMIC_DRAW);
-  glBindBufferRange(GL_UNIFORM_BUFFER, matricesUniLoc, matricesUniBuffer, 0, MatricesUniBufferSize);	//setUniforms();
+  glBindBufferRange(GL_UNIFORM_BUFFER, matricesUniLoc, matricesUniBuffer, 0, MatricesUniBufferSize);
   glBindBuffer(GL_UNIFORM_BUFFER,0);
   glEnable(GL_MULTISAMPLE);
 
@@ -781,12 +797,13 @@ void AssimpRenderer::printShaderInfoLog(GLuint obj)
 
   glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
 
-  if (infologLength > 0)
-  {
+  if (infologLength > 0)  {
     infoLog = (char *)malloc(infologLength);
     glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
     printf("%s\n",infoLog);
     free(infoLog);
+  } else {
+    std::cout << "AssimpRenderer : Could not load shader" << endl;
   }
 }
 
@@ -811,7 +828,7 @@ void AssimpRenderer::printProgramInfoLog(GLuint obj)
   int infologLength = 0, charsWritten  = 0;
   char *infoLog;
 
-  glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
+  glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infologLength);
 
   if (infologLength > 0)
   {

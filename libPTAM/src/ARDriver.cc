@@ -34,6 +34,9 @@ void ARDriver::Init()
   glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0,
                GL_RGBA, mirFrameSize.x, mirFrameSize.y, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+  // fix the glBindVertexArrays bug
+  glewExperimental = GL_TRUE;
   glewInit();
   MakeFrameBuffer();
 
@@ -114,7 +117,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
   // Call the Assimp renderer to add the loaded 3D model to the scene
-  if (NULL != target_model) target_model->renderSceneToFB();
+  if (NULL != target_model) target_model->renderSceneToFB(this->mnFrameBuffer);
 
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -145,20 +148,24 @@ void ARDriver::MakeFrameBuffer()
   glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+  // Initialize DepthBuffer
   GLuint DepthBuffer;
-
   glGenRenderbuffersEXT(1, &DepthBuffer);
   glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, DepthBuffer);
   glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, mirFBSize.x, mirFBSize.y);
 
+  // Initialize mnFramebuffer
   glGenFramebuffersEXT(1, &mnFrameBuffer);
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mnFrameBuffer);
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
                             GL_TEXTURE_RECTANGLE_ARB, mnFrameBufferTex, 0);
+
+  // Bound mnFrameBuffer and DephtBuffer
   glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
                                GL_RENDERBUFFER_EXT, DepthBuffer);
   CheckFramebufferStatus();
 
+  // Unbind framebuffers (bind to 0)
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
   cout << "  ARDriver: FBO.allocated" << endl;
 }

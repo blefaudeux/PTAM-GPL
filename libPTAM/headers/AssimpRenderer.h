@@ -99,7 +99,6 @@ public :
   ~AssimpRenderer();
 
   // Support functions :
-  static int  printOglError(char *file, int line);
   static void crossProduct( float *a, float *b, float *res);
   static void normalize(float *a);
 
@@ -136,7 +135,7 @@ public :
   bool  init();
 
   // - render in an external FB
-  void  renderSceneToFB(void);
+  void  renderSceneToFB(GLuint &framebuffer); // FIXME : We need the buffers address in there !
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
@@ -173,9 +172,6 @@ private:
   // the global Assimp scene object
   const aiScene* scene;
 
-  // scale factor for the model to fit in the window
-  float scaleFactor;
-
   // images / texture
   // map image filenames to textureIds
   // pointer to texture Array
@@ -185,7 +181,7 @@ private:
   string modelname;
 
   // Camera Position & attitude
-  float camX, camY, camZ, alpha, beta, r;
+  float camX, camY, camZ, alpha, beta, r, scaleFactor;
 
   // Frame counting and FPS computation
   long time,timebase,frame;
@@ -197,23 +193,14 @@ private:
 
   void get_bounding_box (aiVector3D* min, aiVector3D* max);
 
-  // MATRIX STUFF
-  // Push and Pop for modelMatrix
-  void pushMatrix();
+  // -- Model matrices operations --
+  void pushMatrix(); // Push and Pop for modelMatrices
   void popMatrix();
 
-  // Model Matrix
-  // Copies the modelMatrix to the uniform buffer
-  void setModelMatrix();
-
-  // The equivalent to glTranslate applied to the model matrix
-  void translate(float x, float y, float z);
-
-  // The equivalent to glRotate applied to the model matrix
-  void rotate(float angle, float x, float y, float z);
-
-  // The equivalent to glScale applied to the model matrix
-  void scale(float x, float y, float z);
+  void setModelMatrix(); // Copies the modelMatrix to the uniform buffer
+  void translate(float x, float y, float z);   // The equivalent to glTranslate applied to the model matrix
+  void rotate(float angle, float x, float y, float z);  // The equivalent to glRotate applied to the model matrix
+  void scale(float x, float y, float z); // The equivalent to glScale applied to the model matrix
 
   // Projection Matrix
   // Computes the projection Matrix and stores it in the uniform buffer
@@ -229,11 +216,14 @@ private:
   void  setCamera(float posX, float posY, float posZ,
                   float lookAtX, float lookAtY, float lookAtZ);
 
-  GLuint setupShaders();
-  int   LoadGLTextures(const aiScene* scene);
-  void  genVAOsAndUniformBuffer(const aiScene *sc);
-  void  printShaderInfoLog(GLuint obj);
-  void  printProgramInfoLog(GLuint obj);
+  GLuint  setupShaders();
+  int     LoadGLTextures(const aiScene* scene);
+  void    genVAOsAndUniformBuffer(const aiScene *sc);
+
+  // Log functions
+  static int    printOglError(char *file, int line);
+  static void   printShaderInfoLog(GLuint obj);
+  static void   printProgramInfoLog(GLuint obj);
 
   // Rendering methods
   // - render Assimp Model

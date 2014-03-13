@@ -69,6 +69,8 @@ public :
     is_slam_started = true;
     cout << "Starting computations" << endl;
     s->Run();
+
+    // TODO : quit the Python VM if the function returned..
   }
 
   /*!

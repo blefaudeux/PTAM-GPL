@@ -31,7 +31,7 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   glEnable(GL_COLOR_MATERIAL);
   
   // Update the lighting effects
-  GLfloat af[4]; 
+  GLfloat af[4];
   af[0]=0.5; af[1]=0.5; af[2]=0.5; af[3]=1.0;
   glLightfv(GL_LIGHT0, GL_AMBIENT, af);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, af);
@@ -40,22 +40,22 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   af[0]=1.0; af[1]=1.0; af[2]=1.0; af[3]=1.0;
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, af);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0);
-    
+
   // Update the 3D model for every eye
+  // (keep the VBO as they are, just change the modelView matrices)
   glMatrixMode(GL_MODELVIEW);
   for(int i=0; i<4; i++)
     {
       if(mnFrameCounter < 100)
-	LookAt(i, 500.0 * (Vector<3>) makeVector( (i<2?-1:1)*(mnFrameCounter < 50 ? -1 : 1) * -0.4 , -0.1, 1) , 0.05 );
+        LookAt(i, 500.0 * (Vector<3>) makeVector( (i<2?-1:1)*(mnFrameCounter < 50 ? -1 : 1) * -0.4 , -0.1, 1) , 0.05 );
       else
-	LookAt(i, v3CameraPos, 0.02 );
+        LookAt(i, v3CameraPos, 0.02 );
       
       glLoadIdentity();
       glMultMatrix(ase3WorldFromEye[i]);
       glScaled(mdEyeRadius, mdEyeRadius, mdEyeRadius);
       glCallList(mnEyeDisplayList);
     }
-
   glDisable(GL_LIGHTING);
   
   // Update the text
@@ -119,8 +119,8 @@ void EyeGame::DrawEye()
     glVertex3f(0,0,1);
     for(int i=0; i<nSegments;i++)
       {
-	glNormal3f(R * sin((double)i * dSegAngle), R * cos((double)i * dSegAngle),  Z);
-	glVertex3f(R * sin((double)i * dSegAngle), R * cos((double)i * dSegAngle),  Z);
+        glNormal3f(R * sin((double)i * dSegAngle), R * cos((double)i * dSegAngle),  Z);
+        glVertex3f(R * sin((double)i * dSegAngle), R * cos((double)i * dSegAngle),  Z);
       }
     glNormal3f(0,R,Z);
     glVertex3f(0,R,Z);
@@ -132,9 +132,9 @@ void EyeGame::DrawEye()
   for(int j = 1; j<nSlices;j++)
     {
       if(j == nBlueSlice)
-	glColor3f(0,0,1);
+        glColor3f(0,0,1);
       if(j == nWhiteSlice)
-	glColor4d(0.92, 0.9, 0.85,1);
+        glColor4d(0.92, 0.9, 0.85,1);
       
       glBegin(GL_QUAD_STRIP);
       double zTop = sin(M_PI/2.0 - dSliceAngle * (double)j);
@@ -142,12 +142,12 @@ void EyeGame::DrawEye()
       double rTop = cos(M_PI/2.0 - dSliceAngle * (double)j);
       double rBot = cos(M_PI/2.0 - dSliceAngle * (double)(j+1));
       for(int i=0; i<nSegments;i++)
-	{
-	  glNormal3f(rTop*sin((double)i*dSegAngle), rTop*cos((double)i*dSegAngle), zTop);
-	  glVertex3f(rTop*sin((double)i*dSegAngle), rTop*cos((double)i*dSegAngle), zTop);
-	  glNormal3f(rBot*sin((double)i*dSegAngle), rBot*cos((double)i*dSegAngle), zBot);
-	  glVertex3f(rBot*sin((double)i*dSegAngle), rBot*cos((double)i*dSegAngle), zBot);
-	};
+        {
+          glNormal3f(rTop*sin((double)i*dSegAngle), rTop*cos((double)i*dSegAngle), zTop);
+          glVertex3f(rTop*sin((double)i*dSegAngle), rTop*cos((double)i*dSegAngle), zTop);
+          glNormal3f(rBot*sin((double)i*dSegAngle), rBot*cos((double)i*dSegAngle), zBot);
+          glVertex3f(rBot*sin((double)i*dSegAngle), rBot*cos((double)i*dSegAngle), zBot);
+        };
       glNormal3f(0,rTop, zTop);
       glVertex3f(0,rTop, zTop);
       glNormal3f(0,rBot, zBot);
@@ -164,8 +164,8 @@ void EyeGame::DrawEye()
     glVertex3f(0,0,-1);
     for(int i=0; i<nSegments;i++)
       {
-	glNormal3f(R * sin((double)i * -dSegAngle), R * cos((double)i * -dSegAngle),  -Z);
-	glVertex3f(R * sin((double)i * -dSegAngle), R * cos((double)i * -dSegAngle),  -Z);
+        glNormal3f(R * sin((double)i * -dSegAngle), R * cos((double)i * -dSegAngle),  -Z);
+        glVertex3f(R * sin((double)i * -dSegAngle), R * cos((double)i * -dSegAngle),  -Z);
       }
     glNormal3f(0,R,-Z);
     glVertex3f(0,R,-Z);
@@ -180,7 +180,7 @@ void EyeGame::Init()
   // Set up the display list for the eyeball.
   mnEyeDisplayList = glGenLists(1);
   glNewList(mnEyeDisplayList,GL_COMPILE);
-  DrawEye();
+  DrawEye(); // Generate VAO for the eyes model
   glEndList();
   MakeShadowTex();
   std::cout << "EyeGame: Initialized " << std::endl;
@@ -195,7 +195,7 @@ void EyeGame::LookAt(int nEye, Vector<3> v3, double dRotLimit)
   normalize(v3E);
   Matrix<3> m3Rot = Identity;
   m3Rot[2] = v3E;
-  m3Rot[0] -= m3Rot[2]*(m3Rot[0]*m3Rot[2]); 
+  m3Rot[0] -= m3Rot[2]*(m3Rot[0]*m3Rot[2]);
   normalize(m3Rot[0]);
   m3Rot[1] = m3Rot[2] ^ m3Rot[0];
   
@@ -223,21 +223,21 @@ void EyeGame::MakeShadowTex()
   for(ir.y = 0; 2 * ir.y < nTexSize; ir.y++)
     for(ir.x = 0; 2 * ir.x < nTexSize; ir.x++)
       {
-	byte val = 0;
-	if((ir - irCenter).mag_squared() < nRadiusSquared)
-	  val = 255;
-	imShadow[ir] = val;
-	imShadow[ImageRef(nTexSize - 1 - ir.x, ir.y)] = val;
-	imShadow[ImageRef(nTexSize - 1 - ir.x, nTexSize - 1 - ir.y)] = val;
-	imShadow[ImageRef(ir.x, nTexSize - 1 - ir.y)] = val;
+        byte val = 0;
+        if((ir - irCenter).mag_squared() < nRadiusSquared)
+          val = 255;
+        imShadow[ir] = val;
+        imShadow[ImageRef(nTexSize - 1 - ir.x, ir.y)] = val;
+        imShadow[ImageRef(nTexSize - 1 - ir.x, nTexSize - 1 - ir.y)] = val;
+        imShadow[ImageRef(ir.x, nTexSize - 1 - ir.y)] = val;
       }
   
   convolveGaussian(imShadow, 4.0);
   glGenTextures(1, &mnShadowTex);
   glBindTexture(GL_TEXTURE_2D,mnShadowTex);
-  glTexImage2D(GL_TEXTURE_2D, 0, 
-	       GL_ALPHA, nTexSize, nTexSize, 0, 
-	       GL_ALPHA, GL_UNSIGNED_BYTE, imShadow.data()); 
+  glTexImage2D(GL_TEXTURE_2D, 0,
+               GL_ALPHA, nTexSize, nTexSize, 0,
+               GL_ALPHA, GL_UNSIGNED_BYTE, imShadow.data());
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 };
