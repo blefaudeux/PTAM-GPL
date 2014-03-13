@@ -135,7 +135,7 @@ public :
   bool  init();
 
   // - render in an external FB
-  void  renderSceneToFB(GLuint &framebuffer); // FIXME : We need the buffers address in there !
+  void  renderSceneToFB(void);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)

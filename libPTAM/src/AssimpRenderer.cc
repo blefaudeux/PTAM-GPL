@@ -660,7 +660,7 @@ void AssimpRenderer::renderScene(void) {
   glutSwapBuffers();
 }
 
-void AssimpRenderer::renderSceneToFB(GLuint &framebuffer) {
+void AssimpRenderer::renderSceneToFB(void) {
 
   // Use our shader
   glUseProgram(program);
@@ -668,12 +668,16 @@ void AssimpRenderer::renderSceneToFB(GLuint &framebuffer) {
   // We are only going to use texture unit 0
   // unfortunately samplers can't reside in uniform blocks
   // so we have set this uniform separately
-  glUniform1i(texUnit,0);
+  glUniform1i(texUnit,0); // FIXME: actually get the proper textures for every loaded model..
+
+  // set the model matrix to the identity Matrix
+  setIdentityMatrix(modelMatrix,4);
+
+  // sets the model matrix to a scale matrix so that the model fits in the window
+  scale(scaleFactor, scaleFactor, scaleFactor);
 
   if (NULL != scene) {
-    cout << "AssimpRenderer: Recursive rendering started" << endl;
-    recursiveRender(scene, scene->mRootNode); // FIXME : crash when we use this..
-    cout << "AssimpRenderer: Recursive rendering ended" << endl;
+    recursiveRender(scene, scene->mRootNode);
   } else {
     cout << "AssimpRenderer: no model to display" << endl;
   }
@@ -684,8 +688,7 @@ void AssimpRenderer::renderSceneToFB(GLuint &framebuffer) {
   glBindVertexArray(0);
 }
 
-// SHADERS
-//
+
 GLuint AssimpRenderer::setupShaders() {
   char *vs = NULL,*fs = NULL,*fs2 = NULL;
 
@@ -748,10 +751,7 @@ GLuint AssimpRenderer::setupShaders() {
   return(p);
 }
 
-// ------------------------------------------------------------
-//
 // Model loading and OpenGL setup
-//
 bool AssimpRenderer::init()
 {
   // Load a model if needed
@@ -764,13 +764,6 @@ bool AssimpRenderer::init()
 
   LoadGLTextures(scene); // scene is already defined from the previous Import3DFile
   cout << "AssimpRenderer: GL textures loaded" << endl;
-
-  //	glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC) glutGetProcAddress("glGetUniformBlockIndex");
-  //	glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC) glutGetProcAddress("glUniformBlockBinding");
-  //	glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) glutGetProcAddress("glGenVertexArrays");
-  //	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glutGetProcAddress("glBindVertexArray");
-  //	glBindBufferRange = (PFNGLBINDBUFFERRANGEPROC) glutGetProcAddress("glBindBufferRange");
-  //	glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) glutGetProcAddress("glDeleteVertexArrays");
 
   program = setupShaders();
   genVAOsAndUniformBuffer(scene); // Generate Vertex Arrays Objects and buffers
@@ -838,61 +831,3 @@ void AssimpRenderer::printProgramInfoLog(GLuint obj)
     free(infoLog);
   }
 }
-
-// ------------------------------------------------------------
-// Main function
-/*
-int main(int argc, char **argv) {
-
-  //  GLUT initialization
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA|GLUT_MULTISAMPLE);
-  glutInitContextVersion (3, 3);
-  glutInitContextFlags (GLUT_COMPATIBILITY_PROFILE );
-  glutInitWindowPosition(100,100);
-  glutInitWindowSize(320,320);
-
-  glutCreateWindow("Lighthouse3D - Assimp Demo");
-
-  //	Init GLEW
-  glewInit();
-  if (glewIsSupported("GL_VERSION_3_3"))
-    printf("Ready for OpenGL 3.3\n");
-  else {
-      printf("OpenGL 3.3 not supported\n");
-      return(1);
-    }
-
-  //  Init the app (load model and textures) and OpenGL
-  if (!init())
-    printf("Could not Load the Model\n");
-
-  printf ("Vendor: %s\n", glGetString (GL_VENDOR));
-  printf ("Renderer: %s\n", glGetString (GL_RENDERER));
-  printf ("Version: %s\n", glGetString (GL_VERSION));
-  printf ("GLSL: %s\n", glGetString (GL_SHADING_LANGUAGE_VERSION));
-
-
-  // return from main loop
-  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-
-  //  GLUT main loop
-  glutMainLoop();
-
-  // cleaning up
-  textureIdMap.clear();
-
-  // clear myMeshes stuff
-  for (unsigned int i = 0; i < myMeshes.size(); ++i) {
-
-      glDeleteVertexArrays(1,&(myMeshes[i].vao));
-      glDeleteTextures(1,&(myMeshes[i].texIndex));
-      glDeleteBuffers(1,&(myMeshes[i].uniformBlockIndex));
-    }
-  // delete buffers
-  glDeleteBuffers(1,&matricesUniBuffer);
-
-  return(0);
-}
-};
-*/
