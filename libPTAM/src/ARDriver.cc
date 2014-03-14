@@ -112,12 +112,13 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100));
   glMultMatrix(se3CfromW);
   
-  // Draw the 3D models
+  // Draw the base 3D stuff
   DrawFadingGrid();
   mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
   // Call the Assimp renderer to add the loaded 3D model to the scene
-  if (NULL != target_model) target_model->renderSceneToFB();
+  if (NULL != target_model)
+    target_model->renderSceneToFB();
 
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -36,6 +36,7 @@ public:
   int   GetCurrentPoints();
   int   GetDiscardedPoints();
   bool  setARModel(const std::string model_file);
+  void  resetMap();
 
 private:
   VideoSource mVideoSource;

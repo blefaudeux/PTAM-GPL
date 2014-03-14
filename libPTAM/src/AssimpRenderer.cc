@@ -249,7 +249,6 @@ void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
   }
 }
 
-
 void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max)
 {
   min->x = min->y = min->z =  1e10f;
@@ -341,7 +340,8 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   }
 
   // Import the scene using Assimp C++ API
-  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+//  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+  scene = importer->ReadFile(pFile, aiProcess_CalcTangentSpace);
   cout << "AssimpRenderer : Scene " << pFile << " import is OK" << endl;
 
   // If the import failed, report it
@@ -364,7 +364,7 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   return true;
 }
 
-int AssimpRenderer::LoadGLTextures(const aiScene* scene)
+int AssimpRenderer::loadGLTextures(const aiScene* scene)
 {
   ILboolean success;
 
@@ -372,12 +372,11 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   ilInit();
 
   /* scan scene's materials for textures */
-  for (unsigned int m=0; m<scene->mNumMaterials; ++m)
-  {
+  for (unsigned int m=0; m<scene->mNumMaterials; ++m)   {
     int texIndex = 0;
-    aiString path;	// filename
-
+    aiString path;
     aiReturn texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+
     while (texFound == AI_SUCCESS) {
       //fill map with textures, OpenGL image ids set to 0
       textureIdMap[path.data] = 0;
@@ -388,6 +387,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   }
 
   int numTextures = textureIdMap.size();
+  cout << "AssimpRenderer : loaded " << numTextures << " textures." << endl;
 
   /* create and fill array with DevIL texture ids */
   ILuint* imageIds = new ILuint[numTextures];
@@ -404,7 +404,7 @@ int AssimpRenderer::LoadGLTextures(const aiScene* scene)
   {
     //save IL image ID
     std::string filename = (*itr).first;  // get filename
-    (*itr).second = textureIds[i];	  // save texture id for filename in map
+    (*itr).second = textureIds[i];        // save texture id for filename in map
 
     ilBindImage(imageIds[i]); /* Binding of DevIL image name */
     ilEnable(IL_ORIGIN_SET);
@@ -576,7 +576,6 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
   }
 }
 
-
 // RENDER
 // - render Assimp Model
 void AssimpRenderer::recursiveRender (const aiScene *sc,
@@ -585,13 +584,12 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
   // Get node transformation matrix
   aiMatrix4x4 m = nd->mTransformation;
   m.Transpose();    // OpenGL matrices are column major
-
   pushMatrix();     // save model matrix and apply node transformation
 
   float aux[16];
   memcpy(aux,&m,sizeof(float) * 16);
   multMatrix(modelMatrix, aux);
-  setModelMatrix(); // FIXME : we call a faulty buffer in there !
+  setModelMatrix();
 
   // draw all meshes assigned to this node
   for (unsigned int n=0; n < nd->mNumMeshes; ++n){
@@ -602,7 +600,7 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
     glBindTexture(GL_TEXTURE_2D, myMeshes[nd->mMeshes[n]].texIndex);
 
     // bind VAO
-    glBindVertexArray(myMeshes[nd->mMeshes[n]].vao); // crash in there
+    glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
 
     // draw
     glDrawElements(GL_TRIANGLES,myMeshes[nd->mMeshes[n]].numFaces*3,GL_UNSIGNED_INT,0);
@@ -661,20 +659,14 @@ void AssimpRenderer::renderScene(void) {
 }
 
 void AssimpRenderer::renderSceneToFB(void) {
-
-  // Use our shader
-  glUseProgram(program);
-
-  // We are only going to use texture unit 0
-  // unfortunately samplers can't reside in uniform blocks
-  // so we have set this uniform separately
-  glUniform1i(texUnit,0); // FIXME: actually get the proper textures for every loaded model..
-
   // set the model matrix to the identity Matrix
   setIdentityMatrix(modelMatrix,4);
 
   // sets the model matrix to a scale matrix so that the model fits in the window
   scale(scaleFactor, scaleFactor, scaleFactor);
+
+  glUseProgram(program);
+  glUniform1i(texUnit,0); // FIXME: actually get the proper textures for every loaded model..
 
   if (NULL != scene) {
     recursiveRender(scene, scene->mRootNode);
@@ -682,10 +674,8 @@ void AssimpRenderer::renderSceneToFB(void) {
     cout << "AssimpRenderer: no model to display" << endl;
   }
 
-  // Stop using the shaders
-  glUseProgram(0);
-
-  glBindVertexArray(0);
+  glUseProgram(0);      // Stop using the shaders
+  glBindVertexArray(0); // Unbind VBA
 }
 
 
@@ -698,7 +688,7 @@ GLuint AssimpRenderer::setupShaders() {
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
   static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
-  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
+  static const std::string fragmentShaderFile = "textureShader.frag"; // dirLightAmbDiffSpec.frag
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());
@@ -760,10 +750,9 @@ bool AssimpRenderer::init()
     return false;
   }
 
-  this->import3DFromFile(modelname);
-
-  LoadGLTextures(scene); // scene is already defined from the previous Import3DFile
-  cout << "AssimpRenderer: GL textures loaded" << endl;
+  import3DFromFile(modelname); // defines Assimp "scene"
+  loadGLTextures(scene);
+  cout << "AssimpRenderer: Model loaded" << endl;
 
   program = setupShaders();
   genVAOsAndUniformBuffer(scene); // Generate Vertex Arrays Objects and buffers

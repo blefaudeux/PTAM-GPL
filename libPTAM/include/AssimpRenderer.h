@@ -135,7 +135,7 @@ public :
   bool  init();
 
   // - render in an external FB
-  void  renderSceneToFB(GLuint &framebuffer); // FIXME : We need the buffers address in there !
+  void  renderSceneToFB(void);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
@@ -217,7 +217,7 @@ private:
                   float lookAtX, float lookAtY, float lookAtZ);
 
   GLuint  setupShaders();
-  int     LoadGLTextures(const aiScene* scene);
+  int     loadGLTextures(const aiScene* scene);
   void    genVAOsAndUniformBuffer(const aiScene *sc);
 
   // Log functions

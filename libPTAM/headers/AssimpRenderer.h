@@ -217,7 +217,7 @@ private:
                   float lookAtX, float lookAtY, float lookAtZ);
 
   GLuint  setupShaders();
-  int     LoadGLTextures(const aiScene* scene);
+  int     loadGLTextures(const aiScene* scene);
   void    genVAOsAndUniformBuffer(const aiScene *sc);
 
   // Log functions

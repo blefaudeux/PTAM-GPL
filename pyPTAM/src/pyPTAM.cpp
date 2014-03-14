@@ -33,12 +33,13 @@ public :
   std::string AR_assets_file;
 
   // Create the SLAM context, and start the parser thread
-  pyPTAM(std::string config_file):config_file("settings.cfg") {
+  pyPTAM(std::string m_config_file):config_file("settings.cfg") {
+    config_file = m_config_file;
     s = NULL;
     is_slam_started = false;
   }
 
-  // Desctructor : stop the brackground thread first !
+  // Destructor : stop the brackground thread first !
   inline ~pyPTAM() {
     if (is_slam_started) {
       s->Stop();
@@ -49,6 +50,9 @@ public :
     cout << "PTAM thread returned" << endl;
   }
 
+  /*!
+   * \brief ConstructAndWrap. Creates the context for a thread, and run
+   */
   void ConstructAndWrap() {
     // Read the settings
     cout << "  Parsing " <<  config_file << " and console" <<  endl;
@@ -142,7 +146,16 @@ public :
       }
   }
 
-  // Start the frame grabbing and computations on a seperate thread
+  /*!
+   * \brief ResetMap : Request a reset of the mapping process
+   */
+  void ResetMap() {
+    this->s->resetMap();
+  }
+
+  /*!
+   * \brief Start the frame grabbing and computations on a seperate thread
+   */
   void Start() {
     if (!is_slam_started) {
       // Start the thread, OpenGL context will be allocated within
@@ -163,8 +176,7 @@ BOOST_PYTHON_MODULE(libpyPTAM)
   using namespace boost::python;
 
   class_<std::vector<double> >("double_vector")
-      .def(vector_indexing_suite<std::vector<double> >())
-      ;
+      .def(vector_indexing_suite<std::vector<double> >());
 
   // Declare the Python API : constructor, start the SLAM, get pose values, etc..
   class_<pyPTAM>("pyPTAM", init<std::string>())
@@ -174,5 +186,6 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
       .def("LoadARModel",         &pyPTAM::LoadARModel)
+      .def("ResetMap",            &pyPTAM::ResetMap)
       ;
 }

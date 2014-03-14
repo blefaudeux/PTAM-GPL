@@ -3,10 +3,10 @@ import libpyPTAM
 import time
 
 ## Try the more detailled pyPTAM interface :
-Slam = libpyPTAM.pyPTAM('settings.cfg')
+Slam = libpyPTAM.pyPTAM('clevo.cfg')
 
 # Load the 3D Model
-Slam.LoadARModel('Lego.obj')
+Slam.LoadARModel('bench.obj')
 
 # Start the Process:
 Slam.Start()

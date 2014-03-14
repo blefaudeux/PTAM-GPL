@@ -58,6 +58,13 @@ bool System::setARModel(const string model_file) {
   AR_assets_filename = model_file;
 }
 
+void System::resetMap(void) {
+  this->mpMapMaker->RequestReset();
+
+  // Wait until the reset has been done ?
+  // FIXME
+}
+
 /*!
  * \brief System::Run
  * The loop function, grabbing the frames and updating the system.
@@ -112,7 +119,7 @@ void System::Run()
     else
       sCaption = mpTracker->GetMessageForUser();
 
-    mGLWindow.DrawCaption(sCaption); // FIXME: Crash here when AssimpRenderer have been used
+    mGLWindow.DrawCaption(sCaption);
     mGLWindow.DrawMenus();
     mGLWindow.swap_buffers();
     mGLWindow.HandlePendingEvents();
