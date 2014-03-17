@@ -1,6 +1,8 @@
-// This is a wrapper to the PTAM start procedure, exposing it to Python using Boost.Python
-// Very basic from now, just testing the idea..
-// Benjamin Lefaudeux
+/*! \brief This is a wrapper to the PTAM start procedure, exposing it to Python using Boost.Python
+ * Very basic from now, just testing the idea..
+ *
+ * @author : Benjamin Lefaudeux
+ */
 
 #include <stdlib.h>
 #include <iostream>
@@ -51,7 +53,8 @@ public :
   }
 
   /*!
-   * \brief ConstructAndWrap. Creates the context for a thread, and run
+   * \brief ConstructAndWrap.
+   * Creates the context for a thread, and run
    */
   void ConstructAndWrap() {
     // Read the settings
@@ -107,7 +110,7 @@ public :
   }
 
   /*!
-   * \brief GetCurrentPoints:
+   * \brief GetCurrentPoints
    * \return the current number of points positionned
    */
   int GetCurrentPoints() {
@@ -128,13 +131,10 @@ public :
       return 0;
   }
 
-//  void MapReset() {
-//    if (is_slam_started) {
-//      s->mpMap.Reset();
-//      cout << "PTAM: Map reset" << endl;
-//    }
-//  }
-
+  /*!
+   * \brief LoadARModel : setup the file describing the 3D model used for AR
+   * \param model_file (handled by ASSIMP, see compatible types)
+   */
   void LoadARModel(std::string model_file) {
     if (NULL == s) {
         cout << "Deferred AR assets loading " << endl;
