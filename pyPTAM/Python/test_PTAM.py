@@ -3,7 +3,7 @@ import libpyPTAM
 import time
 
 ## Try the more detailled pyPTAM interface :
-Slam = libpyPTAM.pyPTAM('clevo.cfg')
+Slam = libpyPTAM.pyPTAM('hp.cfg')
 
 # Load the 3D Model
 Slam.LoadARModel('bench.obj')

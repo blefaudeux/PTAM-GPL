@@ -358,7 +358,7 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   cout << "AssimpRenderer : Model scale " << tmp << endl;
   tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
   tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
-  scaleFactor = 1.f / tmp;
+  scaleFactor = 1.f / (10*tmp);
 
   // We're done. Everything will be cleaned up by the importer destructor
   return true;
@@ -659,14 +659,14 @@ void AssimpRenderer::renderScene(void) {
 }
 
 void AssimpRenderer::renderSceneToFB(void) {
-  // set the model matrix to the identity Matrix
-  setIdentityMatrix(modelMatrix,4);
 
-  // sets the model matrix to a scale matrix so that the model fits in the window
+  // Scale the model matrix so that the model fits in the window
+  setIdentityMatrix(modelMatrix,4);
   scale(scaleFactor, scaleFactor, scaleFactor);
 
+  // Render all the models' nodes
   glUseProgram(program);
-  glUniform1i(texUnit,0); // FIXME: actually get the proper textures for every loaded model..
+  glUniform1i(texUnit,0); // FIXME: issue with the textures, no rendering..
 
   if (NULL != scene) {
     recursiveRender(scene, scene->mRootNode);
@@ -688,7 +688,7 @@ GLuint AssimpRenderer::setupShaders() {
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
   static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
-  static const std::string fragmentShaderFile = "textureShader.frag"; // dirLightAmbDiffSpec.frag
+  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());

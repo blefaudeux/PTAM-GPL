@@ -15,10 +15,14 @@ ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
   mirFrameSize = irFrameSize;
   mCamera.SetImageSize(mirFrameSize);
 
-  if (!ARSceneFile.empty())
+  if (!ARSceneFile.empty()) {
     target_model  = new AssimpRenderer(ARSceneFile);
-  else
-    target_model = NULL;
+    useEyeGame    = false;
+
+  } else {
+    target_model  = NULL;
+    useEyeGame    = true;
+  }
 
   mbInitialised = false;
 }
@@ -35,21 +39,21 @@ void ARDriver::Init()
                GL_RGBA, mirFrameSize.x, mirFrameSize.y, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-  // fix the glBindVertexArrays bug
-  glewExperimental = GL_TRUE;
+  glewExperimental = GL_TRUE;   // fix the glBindVertexArrays bug
   glewInit();
   MakeFrameBuffer();
 
-  // Init the GL-Eyes
-  mGame.Init();
-
-  // Init the Assimp handler
-  if (NULL != target_model)
+  if (NULL != target_model) {
+    // Init the Assimp handler
     if (!target_model->init()) {
       cout << "ARDriver : could not initialise AssimpRenderer" << endl;
       delete target_model;
       target_model = NULL;
     }
+  } else {
+    // Init the GL-Eyes
+    mGame.Init();
+  }
 
   mbInitialised = true;
   cout << "ARDriver : Init done" << endl;
@@ -59,19 +63,6 @@ void ARDriver::Reset()  {
   mGame.Reset();
   mnCounter = 0;
 }
-
-//void ARDriver::LoadARModel(std::string model_file)
-//{
-//  if (NULL==target_model) {
-//    target_model = new AssimpRenderer();
-//    cout << "ARDriver : new renderer created" << endl;
-//  }
-
-//  if (target_model->import3DFromFile(model_file))
-//    cout << "ARDriver : new model loaded" << endl;
-//  else
-//    cout << "ARDriver : problem loading new loaded" << endl;
-//}
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
@@ -114,12 +105,14 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   
   // Draw the base 3D stuff
   DrawFadingGrid();
-  mGame.DrawStuff(se3CfromW.inverse().get_translation());
 
-  // Call the Assimp renderer to add the loaded 3D model to the scene
-  if (NULL != target_model)
-    target_model->renderSceneToFB();
-
+  if (useEyeGame) {
+    mGame.DrawStuff(se3CfromW.inverse().get_translation());
+  } else {
+    // Call the Assimp renderer to add the loaded 3D model to the scene
+    if (NULL != target_model)
+      target_model->renderSceneToFB();
+  }
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_BLEND);
@@ -298,10 +291,10 @@ void ARDriver::DrawFadingGrid()
     nHalfCells = mnCounter + 1;
   int nTot = nHalfCells * 2 + 1;
   Vector<3>  aaVertex[17][17];
+  Vector<3> v3;
+
   for(int i=0; i<nTot; i++)
-    for(int j=0; j<nTot; j++)
-    {
-      Vector<3> v3;
+    for(int j=0; j<nTot; j++) {
       v3[0] = (i - nHalfCells) * 0.1;
       v3[1] = (j - nHalfCells) * 0.1;
       v3[2] = 0.0;
@@ -324,11 +317,5 @@ void ARDriver::DrawFadingGrid()
       glVertex(aaVertex[j][i]);
     glEnd();
   };
-};
-
-
-
-
-
-
+}
 

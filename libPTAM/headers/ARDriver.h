@@ -34,7 +34,6 @@ class ARDriver
            string ARSceneFile = "");
 
   void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld);
-//  void LoadARModel(std::string model_file);
   void Reset();
   void Init();
 
@@ -59,6 +58,7 @@ class ARDriver
   ImageRef mirFrameSize;
   SE3<> mse3;
   bool mbInitialised;
+  bool useEyeGame;
 
   // Eyeballs:
   EyeGame mGame;

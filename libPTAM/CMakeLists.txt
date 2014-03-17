@@ -45,9 +45,11 @@ target_link_libraries(PTAMs ${LINK_LIBS})
 target_link_libraries(PTAMd ${LINK_LIBS})
 
 ### Define the installation procedure
-install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)
-install(FILES ${HEADERS} DESTINATION ${PROJECT_SOURCE_DIR}/include)
+# -- Local install
+# install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)
+# install(FILES ${HEADERS} DESTINATION ${PROJECT_SOURCE_DIR}/include)
 
+# -- System install
 install(FILES ${HEADERS} DESTINATION /usr/local/include/PTAM)
 install(TARGETS PTAMd PTAMs DESTINATION /usr/local/lib)
 
