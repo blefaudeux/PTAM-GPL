@@ -340,8 +340,7 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   }
 
   // Import the scene using Assimp C++ API
-//  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
-  scene = importer->ReadFile(pFile, aiProcess_CalcTangentSpace);
+  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
   cout << "AssimpRenderer : Scene " << pFile << " import is OK" << endl;
 
   // If the import failed, report it
@@ -576,8 +575,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
   }
 }
 
-// RENDER
-// - render Assimp Model
+// Render Assimp Model
 void AssimpRenderer::recursiveRender (const aiScene *sc,
                                       const aiNode* nd)
 {
@@ -591,18 +589,18 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
   multMatrix(modelMatrix, aux);
   setModelMatrix();
 
-  // draw all meshes assigned to this node
+  // Draw all meshes assigned to this node
   for (unsigned int n=0; n < nd->mNumMeshes; ++n){
-    // bind material uniform
+    // Bind material uniform
     glBindBufferRange(GL_UNIFORM_BUFFER, materialUniLoc,
                       myMeshes[nd->mMeshes[n]].uniformBlockIndex, 0, sizeof(struct MyMaterial));
-    // bind texture
+    // Bind texture
     glBindTexture(GL_TEXTURE_2D, myMeshes[nd->mMeshes[n]].texIndex);
 
-    // bind VAO
+    // Bind VAO
     glBindVertexArray(myMeshes[nd->mMeshes[n]].vao);
 
-    // draw
+    // Draw
     glDrawElements(GL_TRIANGLES,myMeshes[nd->mMeshes[n]].numFaces*3,GL_UNSIGNED_INT,0);
   }
 
@@ -658,11 +656,24 @@ void AssimpRenderer::renderScene(void) {
   glutSwapBuffers();
 }
 
-void AssimpRenderer::renderSceneToFB(void) {
+/*
+ * WARNING : This opengl rendering stack crushes previous definitions of :
+ * - model view
+ * - projection matrix
+ * - camera matrix
+ */
+void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
 
-  // Scale the model matrix so that the model fits in the window
-  setIdentityMatrix(modelMatrix,4);
-  scale(scaleFactor, scaleFactor, scaleFactor);
+  // FIXME : Still an issue with the translation of the modelview (?)
+  glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
+  pushMatrix();
+  setModelMatrix();
+
+  float pm[16];
+  glGetFloatv(GL_PROJECTION_MATRIX, pm);
+  glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
+  glBufferSubData(GL_UNIFORM_BUFFER, ProjMatrixOffset, MatrixSize, pm);
+  glBindBuffer(GL_UNIFORM_BUFFER,0);
 
   // Render all the models' nodes
   glUseProgram(program);

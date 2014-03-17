@@ -22,19 +22,19 @@ find_package(DevIL REQUIRED)
 # Find Python 2.7 (Boost <1.54)
 find_path(PYTHON_INCLUDE_DIR python2.7/Python.h
           HINTS "/usr/include")
-set (PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIR}/python2.7)
+set(PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIR}/python2.7)
 
 find_library(PYTHON_LIBRARIES NAMES python2.7 libpython2.7
              HINTS "/usr/lib/x86_64-linux-gnu")
 
 message("\n Python libs : \n ${PYTHON_INCLUDE_DIR}\n ${PYTHON_LIBRARIES}\n")
 
-# Get the PTAM lib and inclues:
+# Get the PTAM lib and includes:
 find_path(PTAM_INCLUDE_DIR PTAM/System.h
           HINTS "/usr/local/include"
           PATH_SUFFIXES PTAM)
 
-set (PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
+set(PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
 
 find_library(PTAM_LIBRARY NAMES PTAMd libPTAMd
              HINTS "/usr/local/lib")
@@ -70,7 +70,7 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Create static and dynamic libraries
-add_library (pyPTAM SHARED ${SRC})
+add_library(pyPTAM SHARED ${SRC})
 
 # Fix the static compilation issue
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )

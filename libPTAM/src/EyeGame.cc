@@ -44,13 +44,14 @@ void EyeGame::DrawStuff(Vector<3> v3CameraPos)
   // Update the 3D model for every eye
   // (keep the VBO as they are, just change the modelView matrices)
   glMatrixMode(GL_MODELVIEW);
-  for(int i=0; i<4; i++)
-  {
+  for(int i=0; i<4; i++)  {
+    // Compute the appropriate 'ase3WorldFromEye' rotation
     if(mnFrameCounter < 100)
       LookAt(i, 500.0 * (Vector<3>) makeVector( (i<2?-1:1)*(mnFrameCounter < 50 ? -1 : 1) * -0.4 , -0.1, 1) , 0.05 );
     else
       LookAt(i, v3CameraPos, 0.02 );
 
+    // Apply it to the current model view
     glLoadIdentity();
     glMultMatrix(ase3WorldFromEye[i]);
     glScaled(mdEyeRadius, mdEyeRadius, mdEyeRadius);

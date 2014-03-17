@@ -14,8 +14,18 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the included directories
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
-include_directories(${PROJECT_SOURCE_DIR}/../libPTAM/include)
-include_directories(${PROJECT_SOURCE_DIR}/../libPTAM/lib)
+
+# Get the PTAM lib and includes:
+find_path(PTAM_INCLUDE_DIR PTAM/System.h
+          HINTS "/usr/local/include"
+          PATH_SUFFIXES PTAM)
+
+set(PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
+include_directories(${PTAM_INCLUDE_DIR})
+
+
+find_library(PTAM_LIBRARY NAMES PTAMd libPTAMd
+             HINTS "/usr/local/lib")
 
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
@@ -36,7 +46,7 @@ endif()
 
 # Build the executable
 ADD_EXECUTABLE(CamCalibrator ${SRC} ${HEADERS})
-TARGET_LINK_LIBRARIES(CamCalibrator PTAMs  ${OPENGL_LIBRARIES})
+TARGET_LINK_LIBRARIES(CamCalibrator PTAMs  ${OPENGL_LIBRARIES} ${PTAM_LIBRARY})
 
 ### Define the installation procedure
 #install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)

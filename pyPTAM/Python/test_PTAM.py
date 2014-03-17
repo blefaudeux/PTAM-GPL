@@ -29,6 +29,3 @@ while keep_going:
 
 del new_pose
 print ('Ending the computations')
-
-
-

@@ -64,6 +64,12 @@ void ARDriver::Reset()  {
   mnCounter = 0;
 }
 
+
+inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
+  for (int i=0; i<3; ++i)
+    vec_out[i] = vec_in[i];
+}
+
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
   if(!mbInitialised)  {
@@ -100,7 +106,7 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   // Set up 3D projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100));
+  glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100)); // Define near and far cutoffs
   glMultMatrix(se3CfromW);
   
   // Draw the base 3D stuff
@@ -110,17 +116,21 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
     mGame.DrawStuff(se3CfromW.inverse().get_translation());
   } else {
     // Call the Assimp renderer to add the loaded 3D model to the scene
-    if (NULL != target_model)
-      target_model->renderSceneToFB();
+    if (NULL != target_model) {
+      Vector<3> cam_pose = se3CfromW.inverse().get_translation();
+      float f_cam_pose[3];
+      VectorToFloatArray(cam_pose, &f_cam_pose[0]);
+
+      target_model->renderSceneToFB(&f_cam_pose[0]);
+    }
   }
   glDisable(GL_DEPTH_TEST);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_BLEND);
-  
+
+  // Set up for drawing 2D stuff:
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  
-  // Set up for drawing 2D stuff:
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT,0);
   DrawDistortedFB();
   
