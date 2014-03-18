@@ -546,8 +546,7 @@ void AssimpRenderer::renderSceneToFB(void) {
   // Proj matrix, View matrix, Model matrix
 
   // Get the modelview and dump it into the uniform buffer (for later shader use)
-  glMatrixMode(GL_MODELVIEW);
-  glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
+  glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix); // FIXME: The modelview we get here is faulty
   scale(scaleFactor, scaleFactor, scaleFactor);
 
   // We don't change the projection matrix, still need to dump it
