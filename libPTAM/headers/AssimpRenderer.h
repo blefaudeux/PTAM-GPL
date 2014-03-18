@@ -135,7 +135,7 @@ public :
   bool  init();
 
   // - render in an external FB
-  void  renderSceneToFB(const float *camera_pose);
+  void  renderSceneToFB(void);
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)

@@ -6,7 +6,7 @@ import time
 Slam = libpyPTAM.pyPTAM('hp.cfg')
 
 # Load the 3D Model
-Slam.LoadARModel('bench.obj')
+Slam.LoadARModel('Lego.obj')
 
 # Start the Process:
 Slam.Start()
@@ -25,7 +25,7 @@ while keep_going:
 
     time.sleep(1)
     i_pict += 1
-    keep_going = (i_pict < 200)
+    keep_going = ((i_pict < 200) and (Slam.SlamAlive()))
 
 del new_pose
 print ('Ending the computations')

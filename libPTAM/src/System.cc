@@ -72,6 +72,8 @@ void System::resetMap(void) {
  */
 void System::Run()
 {
+  this->isAlive = true;
+
   if (!ARDriver_initialized) {
     // Initialize all the graphics here, so that it can be moved to a
     // seperate thread
@@ -126,6 +128,7 @@ void System::Run()
   }
 
   cout << "Ending PTAM run" << endl;
+  this->isAlive = false;
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
@@ -167,14 +170,18 @@ void System::GetCurrentPose(double *pose) const {
   }
 }
 
-int System::GetCurrentKeyframes() {
+int System::GetCurrentKeyframes() const {
   return this->mpMap->vpKeyFrames.size();
 }
 
-int System::GetCurrentPoints() {
+int System::GetCurrentPoints() const {
   return this->mpMap->vpPoints.size();
 }
 
-int System::GetDiscardedPoints() {
+int System::GetDiscardedPoints() const {
   return this->mpMap->vpPointsTrash.size();
+}
+
+bool System::isSlamAlive(void) const {
+  return this->isAlive;
 }

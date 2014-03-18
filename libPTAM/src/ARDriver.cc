@@ -8,6 +8,11 @@ using namespace std;
 
 static bool CheckFramebufferStatus();
 
+inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
+  for (int i=0; i<3; ++i)
+    vec_out[i] = vec_in[i];
+}
+
 ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
                    std::string ARSceneFile)
   :mCamera(cam), mGLWindow(glw)
@@ -64,12 +69,6 @@ void ARDriver::Reset()  {
   mnCounter = 0;
 }
 
-
-inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
-  for (int i=0; i<3; ++i)
-    vec_out[i] = vec_in[i];
-}
-
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
   if(!mbInitialised)  {
@@ -112,16 +111,13 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   // Draw the base 3D stuff
   DrawFadingGrid();
 
+  glMatrixMode(GL_MODELVIEW);
   if (useEyeGame) {
     mGame.DrawStuff(se3CfromW.inverse().get_translation());
   } else {
     // Call the Assimp renderer to add the loaded 3D model to the scene
     if (NULL != target_model) {
-      Vector<3> cam_pose = se3CfromW.inverse().get_translation();
-      float f_cam_pose[3];
-      VectorToFloatArray(cam_pose, &f_cam_pose[0]);
-
-      target_model->renderSceneToFB(&f_cam_pose[0]);
+      target_model->renderSceneToFB(); // The camera pose is already within the modelview matrix
     }
   }
   glDisable(GL_DEPTH_TEST);
@@ -172,17 +168,6 @@ void ARDriver::MakeFrameBuffer()
   // Unbind framebuffers (bind to 0)
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
   cout << "  ARDriver: FBO.allocated" << endl;
-}
-
-static bool CheckFramebufferStatus()  {
-  GLenum n;
-  n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-
-  if(n == GL_FRAMEBUFFER_COMPLETE_EXT)
-    return true; // All good
-  
-  cout << "glCheckFrameBufferStatusExt returned an error." << endl;
-  return false;
 }
 
 void ARDriver::DrawFBBackGround() {
@@ -329,3 +314,15 @@ void ARDriver::DrawFadingGrid()
   };
 }
 
+
+
+static bool CheckFramebufferStatus()  {
+  GLenum n;
+  n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+
+  if(n == GL_FRAMEBUFFER_COMPLETE_EXT)
+    return true; // All good
+
+  cout << "glCheckFrameBufferStatusExt returned an error." << endl;
+  return false;
+}
