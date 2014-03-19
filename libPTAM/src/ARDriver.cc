@@ -10,7 +10,7 @@ static bool CheckFramebufferStatus();
 
 inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
   for (int i=0; i<3; ++i)
-    vec_out[i] = vec_in[i];
+    vec_out[i] = (float) vec_in[i];
 }
 
 ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
@@ -105,19 +105,19 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   // Set up 3D projection
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100)); // Define near and far cutoffs
+  glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100));
   glMultMatrix(se3CfromW);
   
   // Draw the base 3D stuff
   DrawFadingGrid();
-
   glMatrixMode(GL_MODELVIEW);
+
   if (useEyeGame) {
     mGame.DrawStuff(se3CfromW.inverse().get_translation());
   } else {
     // Call the Assimp renderer to add the loaded 3D model to the scene
     if (NULL != target_model) {
-      target_model->renderSceneToFB(); // The camera pose is already within the modelview matrix
+      target_model->renderSceneToFB();
     }
   }
   glDisable(GL_DEPTH_TEST);
@@ -181,7 +181,8 @@ void ARDriver::DrawFBBackGround() {
   glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glDisable(GL_POLYGON_SMOOTH);
   glDisable(GL_BLEND);
-  // Cache the cpu-intesive projections in a display list..
+
+  // Cache the cpu-intensive projections in a display list..
   if(bFirstRun)
   {
     bFirstRun = false;
@@ -221,7 +222,6 @@ void ARDriver::DrawFBBackGround() {
     glCallList(nList);
   glDisable(GL_TEXTURE_RECTANGLE_ARB);
 }
-
 
 void ARDriver::DrawDistortedFB()
 {
@@ -313,8 +313,6 @@ void ARDriver::DrawFadingGrid()
     glEnd();
   };
 }
-
-
 
 static bool CheckFramebufferStatus()  {
   GLenum n;

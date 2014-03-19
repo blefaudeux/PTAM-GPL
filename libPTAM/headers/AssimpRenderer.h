@@ -59,11 +59,11 @@
 #include <vector>
 #include <iostream>
 
-#define MatricesUniBufferSize sizeof(float) * 16 * 3
+#define MatricesUniBufferSize sizeof(GLfloat) * 16 * 3
 #define ProjMatrixOffset 0
-#define ViewMatrixOffset sizeof(float) * 16
-#define ModelMatrixOffset sizeof(float) * 16 * 2
-#define MatrixSize sizeof(float) * 16
+#define ViewMatrixOffset sizeof(GLfloat) * 16
+#define ModelMatrixOffset sizeof(GLfloat) * 16 * 2
+#define MatrixSize sizeof(GLfloat) * 16
 
 #define printOpenGLError() printOglError(__FILE__, __LINE__)
 
@@ -85,11 +85,11 @@ struct MyMesh{
 
 // This is for a shader uniform block
 struct MyMaterial{
-  float diffuse[4];
-  float ambient[4];
-  float specular[4];
-  float emissive[4];
-  float shininess;
+  GLfloat diffuse[4];
+  GLfloat ambient[4];
+  GLfloat specular[4];
+  GLfloat emissive[4];
+  GLfloat shininess;
   int texCount;
 };
 
@@ -99,50 +99,50 @@ public :
   ~AssimpRenderer();
 
   // Support functions :
-  static void crossProduct( float *a, float *b, float *res);
-  static void normalize(float *a);
+  static void crossProduct( GLfloat *a, GLfloat *b, GLfloat *res);
+  static void normalize(GLfloat *a);
 
   // sets the square matrix mat to the identity matrix,
   // size refers to the number of rows (or columns)
-  static void setIdentityMatrix( float *mat, int size);
-  static void multMatrix(float *a, float *b);
+  static void setIdentityMatrix( GLfloat *mat, int size);
+  static void multMatrix(GLfloat *a, GLfloat *b);
 
   // Defines a transformation matrix mat with a translation
-  static void setTranslationMatrix(float *mat,
-                                   float x,
-                                   float y,
-                                   float z);
+  static void setTranslationMatrix(GLfloat *mat,
+                                   GLfloat x,
+                                   GLfloat y,
+                                   GLfloat z);
 
   // Defines a transformation matrix mat with a scale
-  static void setScaleMatrix(float *mat,
-                             float sx,
-                             float sy,
-                             float sz);
+  static void setScaleMatrix(GLfloat *mat,
+                             GLfloat sx,
+                             GLfloat sy,
+                             GLfloat sz);
 
   // Defines a transformation matrix mat with a rotation
   // angle alpha and a rotation axis (x,y,z)
-  static void setRotationMatrix(float *mat,
-                                float angle,
-                                float x,
-                                float y,
-                                float z);
+  static void setRotationMatrix(GLfloat *mat,
+                                GLfloat angle,
+                                GLfloat x,
+                                GLfloat y,
+                                GLfloat z);
 
-  static void set_float4(float f[4], float a, float b, float c, float d);
+  static void set_GLfloat4(GLfloat f[4], GLfloat a, GLfloat b, GLfloat c, GLfloat d);
 
-  static void color4_to_float4(const aiColor4D *c, float f[4]);
+  static void color4_to_GLfloat4(const aiColor4D *c, GLfloat f[4]);
 
   bool  import3DFromFile( const string& pFile);
   bool  init();
 
   // - render in an external FB
-  void  renderSceneToFB(void);
+  void  renderSceneToFB();
 
 private:
   // Model Matrix (part of the OpenGL Model View Matrix)
-  float modelMatrix[16];
+  GLfloat modelMatrix[16];
 
   // For push and pop matrix
-  vector<float *> matrixStack;
+  vector<GLfloat *> matrixStack;
 
   // Vertex Attribute Locations
   GLuint vertexLoc, normalLoc, texCoordLoc;
@@ -160,7 +160,7 @@ private:
 
   // Uniform Buffer for Matrices
   // this buffer will contain 3 matrices: projection, view and model
-  // each matrix is a float array with 16 components
+  // each matrix is a GLfloat array with 16 components
   GLuint matricesUniBuffer;
 
   // Program and Shader Identifiers
@@ -181,7 +181,7 @@ private:
   string modelname;
 
   // Camera Position & attitude
-  float camX, camY, camZ, alpha, beta, r, scaleFactor;
+  GLfloat camX, camY, camZ, alpha, beta, r, scaleFactor;
 
   // Frame counting and FPS computation
   long time,timebase,frame;
@@ -198,23 +198,23 @@ private:
   void popMatrix();
 
   void setModelMatrix(); // Copies the modelMatrix to the uniform buffer
-  void translate(float x, float y, float z);   // The equivalent to glTranslate applied to the model matrix
-  void rotate(float angle, float x, float y, float z);  // The equivalent to glRotate applied to the model matrix
-  void scale(float x, float y, float z); // The equivalent to glScale applied to the model matrix
+  void translate(GLfloat x, GLfloat y, GLfloat z);   // The equivalent to glTranslate applied to the model matrix
+  void rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);  // The equivalent to glRotate applied to the model matrix
+  void scale(GLfloat x, GLfloat y, GLfloat z); // The equivalent to glScale applied to the model matrix
 
   // Projection Matrix
   // Computes the projection Matrix and stores it in the uniform buffer
-  void buildProjectionMatrix(float fov,
-                             float ratio,
-                             float nearp,
-                             float farp);
+  void buildProjectionMatrix(GLfloat fov,
+                             GLfloat ratio,
+                             GLfloat nearp,
+                             GLfloat farp);
 
   // View Matrix
   // Computes the viewMatrix and stores it in the uniform buffer
   // note: it assumes the camera is not tilted,
   // i.e. a vertical up vector along the Y axis (remember gluLookAt?)
-  void  setCamera(float posX, float posY, float posZ,
-                  float lookAtX, float lookAtY, float lookAtZ);
+  void  setCamera(GLfloat posX, GLfloat posY, GLfloat posZ,
+                  GLfloat lookAtX, GLfloat lookAtY, GLfloat lookAtZ);
 
   GLuint  setupShaders();
   int     loadGLTextures(const aiScene* scene);

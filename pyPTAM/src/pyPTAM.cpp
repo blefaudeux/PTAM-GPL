@@ -47,9 +47,7 @@ public :
       s->Stop();
       is_slam_started = false;
     }
-
     sys_thread->join();
-    cout << "PTAM thread returned" << endl;
   }
 
   /*!
@@ -58,11 +56,8 @@ public :
    */
   void ConstructAndWrap() {
     // Read the settings
-    cout << "  Parsing " <<  config_file << " and console" <<  endl;
+    cout << "  Parsing " <<  config_file << endl;
     GUI.LoadFile(config_file);
-
-//    GUI.StartParserThread(); // Start parsing of the console input
-//    atexit(GUI.StopParserThread);
 
     // Build the new context
     s = new System();
@@ -133,10 +128,10 @@ public :
   }
 
   /*!
-   * \brief SlamAlive : See if the SLAM thread is still alive
+   * \brief isAlive : See if the SLAM thread is still alive
    * \return
    */
-  bool SlamAlive(){
+  bool isAlive(){
     if (is_slam_started)
       return s->isSlamAlive();
     else
@@ -197,7 +192,7 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
-      .def("SlamAlive",           &pyPTAM::SlamAlive)
+      .def("isAlive",             &pyPTAM::isAlive)
       .def("LoadARModel",         &pyPTAM::LoadARModel)
       .def("ResetMap",            &pyPTAM::ResetMap)
       ;

@@ -28,8 +28,8 @@
 
 #include "AssimpRenderer.h"
 
-static inline float DegToRad(float degrees) {
-  return (float)(degrees * (M_PI / 180.0f));
+static inline GLfloat DegToRad(GLfloat degrees) {
+  return (GLfloat)(degrees * (M_PI / 180.0f));
 }
 
 AssimpRenderer::AssimpRenderer(const std::string ARSceneFile) {
@@ -81,11 +81,11 @@ AssimpRenderer::~AssimpRenderer()
   glDeleteBuffers(1,&matricesUniBuffer);
 }
 
-void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, float farp) {
+void AssimpRenderer::buildProjectionMatrix(GLfloat fov, GLfloat ratio, GLfloat nearp, GLfloat farp) {
 
-  float projMatrix[16];
+  GLfloat projMatrix[16];
 
-  float f = 1.0f / tan (fov * (M_PI / 360.0f));
+  GLfloat f = 1.0f / tan (fov * (M_PI / 360.0f));
 
   setIdentityMatrix(projMatrix,4);
 
@@ -101,7 +101,7 @@ void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, 
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
-void AssimpRenderer::crossProduct( float *a, float *b, float *res) {
+void AssimpRenderer::crossProduct( GLfloat *a, GLfloat *b, GLfloat *res) {
 
   res[0] = a[1] * b[2]  -  b[1] * a[2];
   res[1] = a[2] * b[0]  -  b[2] * a[0];
@@ -198,12 +198,12 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   // Now we can access the file's contents.
   aiVector3D scene_min, scene_max;
   get_bounding_box(&scene_min, &scene_max);
-  float tmp;
+  GLfloat tmp;
   tmp = scene_max.x-scene_min.x;
   cout << "AssimpRenderer : Model scale " << tmp << endl;
   tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
   tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
-  scaleFactor = 1.f / (100*tmp);
+  scaleFactor = 1.0 / (100 * tmp);
 
   // We're done. Everything will be cleaned up by the importer destructor
   return true;
@@ -285,8 +285,8 @@ int AssimpRenderer::loadGLTextures(const aiScene* scene)
 
 
 
-void AssimpRenderer::color4_to_float4(const aiColor4D *c,
-                                      float f[4]) {
+void AssimpRenderer::color4_to_GLfloat4(const aiColor4D *c,
+                                        GLfloat f[4]) {
   f[0] = c->r;
   f[1] = c->g;
   f[2] = c->b;
@@ -330,7 +330,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
     if (mesh->HasPositions()) {
       glGenBuffers(1, &buffer);
       glBindBuffer(GL_ARRAY_BUFFER, buffer);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mVertices, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*3*mesh->mNumVertices, mesh->mVertices, GL_STATIC_DRAW);
       glEnableVertexAttribArray(vertexLoc);
       glVertexAttribPointer(vertexLoc, 3, GL_FLOAT, 0, 0, 0);
     }
@@ -339,14 +339,14 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
     if (mesh->HasNormals()) {
       glGenBuffers(1, &buffer);
       glBindBuffer(GL_ARRAY_BUFFER, buffer);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*3*mesh->mNumVertices, mesh->mNormals, GL_STATIC_DRAW);
       glEnableVertexAttribArray(normalLoc);
       glVertexAttribPointer(normalLoc, 3, GL_FLOAT, 0, 0, 0);
     }
 
     // buffer for vertex texture coordinates
     if (mesh->HasTextureCoords(0)) {
-      float *texCoords = (float *)malloc(sizeof(float)*2*mesh->mNumVertices);
+      GLfloat *texCoords = (GLfloat *)malloc(sizeof(GLfloat)*2*mesh->mNumVertices);
       for (unsigned int k = 0; k < mesh->mNumVertices; ++k) {
 
         texCoords[k*2]   = mesh->mTextureCoords[0][k].x;
@@ -355,7 +355,7 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
       }
       glGenBuffers(1, &buffer);
       glBindBuffer(GL_ARRAY_BUFFER, buffer);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(float)*2*mesh->mNumVertices, texCoords, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*2*mesh->mNumVertices, texCoords, GL_STATIC_DRAW);
       glEnableVertexAttribArray(texCoordLoc);
       glVertexAttribPointer(texCoordLoc, 2, GL_FLOAT, 0, 0, 0);
     }
@@ -378,32 +378,32 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
     else
       aMat.texCount = 0;
 
-    float c[4];
-    set_float4(c, 0.8f, 0.8f, 0.8f, 1.0f);
+    GLfloat c[4];
+    set_GLfloat4(c, 0.8f, 0.8f, 0.8f, 1.0f);
     aiColor4D diffuse;
     if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
-      color4_to_float4(&diffuse, c);
+      color4_to_GLfloat4(&diffuse, c);
     memcpy(aMat.diffuse, c, sizeof(c));
 
-    set_float4(c, 0.2f, 0.2f, 0.2f, 1.0f);
+    set_GLfloat4(c, 0.2f, 0.2f, 0.2f, 1.0f);
     aiColor4D ambient;
     if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_AMBIENT, &ambient))
-      color4_to_float4(&ambient, c);
+      color4_to_GLfloat4(&ambient, c);
     memcpy(aMat.ambient, c, sizeof(c));
 
-    set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
+    set_GLfloat4(c, 0.0f, 0.0f, 0.0f, 1.0f);
     aiColor4D specular;
     if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_SPECULAR, &specular))
-      color4_to_float4(&specular, c);
+      color4_to_GLfloat4(&specular, c);
     memcpy(aMat.specular, c, sizeof(c));
 
-    set_float4(c, 0.0f, 0.0f, 0.0f, 1.0f);
+    set_GLfloat4(c, 0.0f, 0.0f, 0.0f, 1.0f);
     aiColor4D emission;
     if(AI_SUCCESS == aiGetMaterialColor(mtl, AI_MATKEY_COLOR_EMISSIVE, &emission))
-      color4_to_float4(&emission, c);
+      color4_to_GLfloat4(&emission, c);
     memcpy(aMat.emissive, c, sizeof(c));
 
-    float shininess = 0.0;
+    GLfloat shininess = 0.0;
     unsigned int max;
     aiGetMaterialFloatArray(mtl, AI_MATKEY_SHININESS, &shininess, &max);
     aMat.shininess = shininess;
@@ -416,9 +416,9 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
   }
 }
 
-void AssimpRenderer::multMatrix(float *a,
-                                float *b) { // Not quite optimal... recode with GLM lib ?
-  float res[16];
+void AssimpRenderer::multMatrix(GLfloat *a,
+                                GLfloat *b) { // Not quite optimal... recode with GLM lib ?
+  GLfloat res[16];
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
       res[j*4 + i] = 0.0f;
@@ -427,13 +427,13 @@ void AssimpRenderer::multMatrix(float *a,
       }
     }
   }
-  memcpy(a, res, 16 * sizeof(float));
+  memcpy(a, res, 16 * sizeof(GLfloat));
 }
 
 // Normalize a vec3
-void AssimpRenderer::normalize(float *a) {
+void AssimpRenderer::normalize(GLfloat *a) {
 
-  float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
+  GLfloat mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
 
   a[0] /= mag;
   a[1] /= mag;
@@ -442,14 +442,14 @@ void AssimpRenderer::normalize(float *a) {
 
 // Handle the matrix stack (modelview)
 void AssimpRenderer::pushMatrix() {
-  float *aux = (float *)malloc(sizeof(float) * 16);
-  memcpy(aux, modelMatrix, sizeof(float) * 16);
+  GLfloat *aux = (GLfloat *)malloc(sizeof(GLfloat) * 16);
+  memcpy(aux, modelMatrix, sizeof(GLfloat) * 16);
   matrixStack.push_back(aux);
 }
 
 void AssimpRenderer::popMatrix() {
-  float *m = matrixStack[matrixStack.size()-1];
-  memcpy(modelMatrix, m, sizeof(float) * 16);
+  GLfloat *m = matrixStack[matrixStack.size()-1];
+  memcpy(modelMatrix, m, sizeof(GLfloat) * 16);
   matrixStack.pop_back();
   free(m);
 }
@@ -463,8 +463,8 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
   m.Transpose();    // OpenGL matrices are column major
   pushMatrix();     // save model matrix and apply node transformation
 
-  float aux[16];
-  memcpy(aux,&m,sizeof(float) * 16);
+  GLfloat aux[16];
+  memcpy(aux,&m,sizeof(GLfloat) * 16);
   multMatrix(modelMatrix, aux);
   setModelMatrix();
 
@@ -494,7 +494,7 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
 // Rendering Callback Function
 void AssimpRenderer::renderScene(void) {
 
-  float step = 0.0f;
+  GLfloat step = 0.0f;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -505,7 +505,7 @@ void AssimpRenderer::renderScene(void) {
   setIdentityMatrix(modelMatrix,4);
 
   // sets the model matrix to a scale matrix so that the model fits in the window
-//  scale(scaleFactor, scaleFactor, scaleFactor);
+  scale(scaleFactor, scaleFactor, scaleFactor);
 
   // keep rotating the model
   rotate(step, 0.0f, 1.0f, 0.0f);
@@ -535,26 +535,17 @@ void AssimpRenderer::renderScene(void) {
   glutSwapBuffers();
 }
 
-/*
- * WARNING : This opengl rendering stack crushes previous definitions of :
- * - model view
- * - projection matrix
- * - camera matrix
- */
-void AssimpRenderer::renderSceneToFB(void) {
-  // Read the previous values in the OpenGL stack
-  // Proj matrix, View matrix, Model matrix
-
+void AssimpRenderer::renderSceneToFB() {
   // Get the modelview and dump it into the uniform buffer (for later shader use)
-  glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix); // FIXME: The modelview we get here is faulty
+  glGetFloatv(GL_MODELVIEW, modelMatrix); // FIXME: The modelview we get here is faulty // GL_PROJECTION_MATRIX
   scale(scaleFactor, scaleFactor, scaleFactor);
 
   // We don't change the projection matrix, still need to dump it
-  float pm[16];
+  GLfloat pm[16];
   glGetFloatv(GL_PROJECTION_MATRIX, pm);
-  glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
   glBufferSubData(GL_UNIFORM_BUFFER, ProjMatrixOffset, MatrixSize, pm);
-  glBindBuffer(GL_UNIFORM_BUFFER,0);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
   // View Matrix is 000 by default
   setCamera(0,0,0,0,0,0);
@@ -573,24 +564,24 @@ void AssimpRenderer::renderSceneToFB(void) {
   glBindVertexArray(0); // Unbind VBA
 }
 
-void AssimpRenderer::rotate(float angle, float x, float y, float z) {
-  float aux[16];
+void AssimpRenderer::rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) {
+  GLfloat aux[16];
   setRotationMatrix(aux,angle,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();
 }
 
-void AssimpRenderer::scale(float x, float y, float z) {
-  float aux[16];
+void AssimpRenderer::scale(GLfloat x, GLfloat y, GLfloat z) {
+  GLfloat aux[16];
   setScaleMatrix(aux,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();
 }
 
-void AssimpRenderer::setCamera(float posX, float posY, float posZ,
-                               float lookAtX, float lookAtY, float lookAtZ) {
+void AssimpRenderer::setCamera(GLfloat posX, GLfloat posY, GLfloat posZ,
+                               GLfloat lookAtX, GLfloat lookAtY, GLfloat lookAtZ) {
 
-  float dir[3], right[3], up[3];
+  GLfloat dir[3], right[3], up[3];
 
   up[0] = 0.0f;	up[1] = 1.0f;	up[2] = 0.0f;
 
@@ -605,7 +596,7 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
   crossProduct(right,dir,up);
   normalize(up);
 
-  float viewMatrix[16],aux[16];
+  GLfloat viewMatrix[16],aux[16];
 
   viewMatrix[0]  = right[0];
   viewMatrix[4]  = right[1];
@@ -636,7 +627,7 @@ void AssimpRenderer::setCamera(float posX, float posY, float posZ,
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
-void AssimpRenderer::setIdentityMatrix( float *mat,
+void AssimpRenderer::setIdentityMatrix( GLfloat *mat,
                                         int size) {
   // fill matrix with 0s
   for (int i = 0; i < size * size; ++i)
@@ -656,13 +647,13 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
-//  // OpenGL 2.0 shaders ..> ModelView is handled outside of the shaders
-//  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
-//  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
+  // OpenGL 2.0 shaders ..> ModelView is handled outside of the shaders
+  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
+  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
 
-  // OpenGL 3.3 shaders ..> ModelView is handled within the shaders
-  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
-  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+  //  // OpenGL 3.1 and above shaders ..> ModelView is handled within the shaders
+  //  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
+  //  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());
@@ -686,6 +677,8 @@ GLuint AssimpRenderer::setupShaders() {
   printShaderInfoLog(v);
   printShaderInfoLog(f);
   cout << "-----" << endl;
+
+  // TODO: print a specific error message if the loaded shaders are not adequate
 
   p = glCreateProgram();
   glAttachShader(p,v);
@@ -716,10 +709,10 @@ GLuint AssimpRenderer::setupShaders() {
 }
 
 // Defines a transformation matrix mat with a translation
-void AssimpRenderer::setTranslationMatrix(float *mat,
-                                          float x,
-                                          float y,
-                                          float z) {
+void AssimpRenderer::setTranslationMatrix(GLfloat *mat,
+                                          GLfloat x,
+                                          GLfloat y,
+                                          GLfloat z) {
   setIdentityMatrix(mat,4);
   mat[12] = x;
   mat[13] = y;
@@ -727,17 +720,17 @@ void AssimpRenderer::setTranslationMatrix(float *mat,
 }
 
 // Defines a transformation matrix mat with a scale
-void AssimpRenderer::setScaleMatrix(float *mat,
-                                    float sx,
-                                    float sy,
-                                    float sz) {
+void AssimpRenderer::setScaleMatrix(GLfloat *mat,
+                                    GLfloat sx,
+                                    GLfloat sy,
+                                    GLfloat sz) {
   setIdentityMatrix(mat,4);
   mat[0] = sx;
   mat[5] = sy;
   mat[10] = sz;
 }
 
-void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d) {
+void AssimpRenderer::set_GLfloat4(GLfloat f[4], GLfloat a, GLfloat b, GLfloat c, GLfloat d) {
   f[0] = a;
   f[1] = b;
   f[2] = c;
@@ -746,14 +739,14 @@ void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d) 
 
 // Defines a transformation matrix mat with a rotation
 // angle alpha and a rotation axis (x,y,z)
-void AssimpRenderer::setRotationMatrix(float *mat, float angle,
-                                       float x, float y, float z) {
-  float radAngle = DegToRad(angle);
-  float co = cos(radAngle);
-  float si = sin(radAngle);
-  float x2 = x*x;
-  float y2 = y*y;
-  float z2 = z*z;
+void AssimpRenderer::setRotationMatrix(GLfloat *mat, GLfloat angle,
+                                       GLfloat x, GLfloat y, GLfloat z) {
+  GLfloat radAngle = DegToRad(angle);
+  GLfloat co = cos(radAngle);
+  GLfloat si = sin(radAngle);
+  GLfloat x2 = x*x;
+  GLfloat y2 = y*y;
+  GLfloat z2 = z*z;
 
   mat[0] = x2 + (y2 + z2) * co;
   mat[4] = x * y * (1 - co) - z * si;
@@ -785,8 +778,8 @@ void AssimpRenderer::setModelMatrix() {
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
-void AssimpRenderer::translate(float x, float y, float z) {
-  float aux[16];
+void AssimpRenderer::translate(GLfloat x, GLfloat y, GLfloat z) {
+  GLfloat aux[16];
   setTranslationMatrix(aux,x,y,z);
   multMatrix(modelMatrix,aux);
   setModelMatrix();

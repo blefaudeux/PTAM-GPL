@@ -2,7 +2,7 @@
 import libpyPTAM
 import time
 
-## Try the more detailled pyPTAM interface :
+## Create a new PTAM SLAM :
 Slam = libpyPTAM.pyPTAM('hp.cfg')
 
 # Load the 3D Model
@@ -25,7 +25,7 @@ while keep_going:
 
     time.sleep(1)
     i_pict += 1
-    keep_going = ((i_pict < 200) and (Slam.SlamAlive()))
+    keep_going = ((i_pict < 200) and (Slam.isAlive()))
 
 del new_pose
-print ('Ending the computations')
+print ('Bye bye, good seeing you around')
