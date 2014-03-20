@@ -42,19 +42,24 @@ struct Trail    // This struct is used for initial correspondences of the first 
 class Tracker
 {
 public:
-  Tracker(CVD::ImageRef irVideoSize, const ATANCamera &c, Map &m, MapMaker &mm);
+  Tracker(CVD::ImageRef irVideoSize, const ATANCamera &c, Map &m, MapMaker &mm, bool _automated_start = false);
   
   // TrackFrame is the main working part of the tracker: call this every frame.
   void TrackFrame(CVD::Image<CVD::byte> &imFrame, bool bDraw); 
 
-  inline SE3<> GetCurrentPose() { return mse3CamFromWorld;}
+  // Try to handle the starting procedure automatically
+  void AutomatedMapStart(void);
+
+  inline SE3<> GetCurrentPose() const { return mse3CamFromWorld;}
   
   // Gets messages to be printed on-screen for the user.
   std::string GetMessageForUser();
   
 protected:
+  bool b_automated_start;
+
   KeyFrame mCurrentKF;            // The current working frame as a keyframe struct
-  
+
   // The major components to which the tracker needs access:
   Map &mMap;                      // The map, consisting of points and keyframes
   MapMaker &mMapMaker;            // The class which maintains the map
@@ -85,9 +90,11 @@ protected:
   int SearchForPoints(std::vector<TrackerData*> &vTD, 
 		      int nRange, 
 		      int nFineIts);  // Finds points in the image
+
   Vector<6> CalcPoseUpdate(std::vector<TrackerData*> vTD, 
 			   double dOverrideSigma = 0.0, 
 			   bool bMarkOutliers = false); // Updates pose from found points.
+
   SE3<> mse3CamFromWorld;           // Camera pose: this is what the tracker updates every frame.
   SE3<> mse3StartPos;               // What the camera pose was at the start of the frame.
   Vector<6> mv6CameraVelocity;    // Motion model

@@ -73,10 +73,9 @@ void GLWindow2::GUICommandHandler(string sCommand, string sParams)  // Called by
   // was not handled was registered....
   cout << "! GLWindow::GUICommandHandler: unhandled command "<< sCommand << endl;
   exit(1);
-}; 
+}
 
-void GLWindow2::DrawMenus()
-{
+void GLWindow2::DrawMenus() {
   glDisable(GL_STENCIL_TEST);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_TEXTURE_2D);
@@ -100,32 +99,27 @@ void GLWindow2::DrawMenus()
       (*i)->Render(nTop, nHeight, size()[0], *this);
       nTop+=nHeight+1;
     }
-  
 }
 
-void GLWindow2::SetupUnitOrtho()
-{
+void GLWindow2::SetupUnitOrtho()  {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(0,1,1,0,0,1);
 }
 
-void GLWindow2::SetupWindowOrtho()
-{
+void GLWindow2::SetupWindowOrtho()  {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(size());
 }
 
-void GLWindow2::SetupVideoOrtho()
-{
+void GLWindow2::SetupVideoOrtho() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(-0.5,(double)mirVideoSize.x - 0.5, (double) mirVideoSize.y - 0.5, -0.5, -1.0, 1.0);
 }
 
-void GLWindow2::SetupVideoRasterPosAndZoom()
-{ 
+void GLWindow2::SetupVideoRasterPosAndZoom() {
   glRasterPos2d(-0.5,-0.5);
   double adZoom[2];
   adZoom[0] = (double) size()[0] / (double) mirVideoSize[0];
@@ -189,7 +183,6 @@ void GLWindow2::DrawCaption(string s)
   PrintString(ImageRef(10,nTopOfBox + 13), s);
 }
 
-
 void GLWindow2::HandlePendingEvents()
 {
   handle_events(*this);
@@ -224,7 +217,6 @@ void GLWindow2::on_mouse_down(GLWindow& win, CVD::ImageRef where, int state, int
   bool bHandled = false;
   for(unsigned int i=0; !bHandled && i<mvpGLWindowMenus.size(); i++)
     bHandled = mvpGLWindowMenus[i]->HandleClick(button, state, where.x, where.y);
-
 }
 
 void GLWindow2::on_event(GLWindow& win, int event)

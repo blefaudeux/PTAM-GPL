@@ -28,7 +28,7 @@ class MapViewer;
 class System
 {
 public:
-  System();
+  System(bool automate_start = false);
   void  GetCurrentPose(double *pose) const;
   int   GetCurrentKeyframes(void) const;
   int   GetCurrentPoints(void) const;
@@ -42,6 +42,7 @@ public:
 private:
   bool b_done;
   bool b_is_alive;
+  bool b_automated_track_start;
 
   // Handle GUI
   bool b_draw_gui;

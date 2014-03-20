@@ -68,9 +68,6 @@ void ARDriver::Reset()  {
   mnCounter = 0;
 }
 
-
-
-
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
   if(!mbInitialised)  {
@@ -118,6 +115,10 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   } else {
     // Call the Assimp renderer to add the loaded 3D model to the scene
     if (NULL != target_model) {
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glMultMatrix(se3CfromW.inverse());
+
       Vector<3> cam_pose = se3CfromW.inverse().get_translation();
       float f_cam_pose[3];
       VectorToFloatArray(cam_pose, &f_cam_pose[0]);
@@ -320,7 +321,6 @@ void ARDriver::DrawFadingGrid()
 }
 
 // -- Support functions
-
 inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
   for (int i=0; i<3; ++i)
     vec_out[i] = vec_in[i];

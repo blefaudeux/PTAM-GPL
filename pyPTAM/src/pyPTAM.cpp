@@ -29,16 +29,20 @@ struct pyPTAM {
 public :
   System *s;
   bool is_slam_started;
+  bool b_automated_start;
+
   std::string config_file;
   boost::thread *sys_thread;
   std::vector <double> new_pose;
   std::string AR_assets_file;
 
   // Create the SLAM context, and start the parser thread
-  pyPTAM(std::string m_config_file):config_file("settings.cfg") {
+  pyPTAM(std::string m_config_file, bool automate_start = false)
+    :config_file("settings.cfg") {
     config_file = m_config_file;
     s = NULL;
     is_slam_started = false;
+    b_automated_start = automate_start;
   }
 
   // Destructor : stop the brackground thread first !
@@ -59,11 +63,9 @@ public :
     // Read the settings
     cout << "  Parsing " <<  config_file << " and console" <<  endl;
     GUI.LoadFile(config_file);
-//    GUI.StartParserThread(); // Start parsing of the console input
-//    atexit(GUI.StopParserThread);
 
     // Build the new context
-    s = new System();
+    s = new System(b_automated_start);
 
     // Load the assets if needed
     if (!AR_assets_file.empty()) {
@@ -183,7 +185,7 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def(vector_indexing_suite<std::vector<double> >());
 
   // Declare the Python API : constructor, start the SLAM, get pose values, etc..
-  class_<pyPTAM>("pyPTAM", init<std::string>())
+  class_<pyPTAM>("pyPTAM", init<std::string, bool>())
       .def("Start",               &pyPTAM::Start)
       .def("GetPose",             &pyPTAM::GetPose)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)

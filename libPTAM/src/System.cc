@@ -12,7 +12,7 @@ using namespace CVD;
 using namespace std;
 using namespace GVars3;
 
-System::System()
+System::System(bool automate_start)
   : mGLWindow(mVideoSource.Size(), "PTAM"),
     b_draw_gui(false)
 {
@@ -37,9 +37,9 @@ System::System()
     exit(1);
   }
   
-  mpMap = new Map;
-  mpMapMaker = new MapMaker(*mpMap, *mpCamera);
-  mpTracker = new Tracker(mVideoSource.Size(), *mpCamera, *mpMap, *mpMapMaker);
+  mpMap       = new Map;
+  mpMapMaker  = new MapMaker(*mpMap, *mpCamera);
+  mpTracker   = new Tracker(mVideoSource.Size(), *mpCamera, *mpMap, *mpMapMaker, automate_start);
   
   GUI.ParseLine("GLWindow.AddMenu Menu Menu");
   GUI.ParseLine("Menu.ShowMenu Root");
@@ -52,6 +52,8 @@ System::System()
   
   b_done = false;
   b_is_alive = false;
+  b_automated_track_start = automate_start;
+
   ARDriver_initialized = false;
   AR_assets_filename = "";
 }

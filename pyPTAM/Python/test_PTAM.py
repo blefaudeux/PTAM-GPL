@@ -3,7 +3,7 @@ import libpyPTAM
 import time
 
 ## Try the more detailled pyPTAM interface :
-Slam = libpyPTAM.pyPTAM('hp.cfg')
+Slam = libpyPTAM.pyPTAM('microsoft.cfg', False)
 
 # Load the 3D Model
 Slam.LoadARModel('bench.obj')

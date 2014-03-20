@@ -223,7 +223,7 @@ private:
   void    genVAOsAndUniformBuffer(const aiScene *sc);
 
   // Log functions
-  static int    printOglError(char *file, int line);
+  static int    printOglError(const char *file, int line);
   static void   printShaderInfoLog(GLuint obj);
   static void   printProgramInfoLog(GLuint obj);
 

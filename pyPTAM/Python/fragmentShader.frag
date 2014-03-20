@@ -1,4 +1,4 @@
-#version 330
+#version 130
 
 layout (std140) uniform Material {
 	vec4 diffuse;

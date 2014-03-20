@@ -296,7 +296,7 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   cout << "AssimpRenderer : Model scale " << tmp << endl;
   tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
   tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
-  scaleFactor = 1.f / (100 * tmp);
+  scaleFactor = 1.f / tmp;
 
   // We're done. Everything will be cleaned up by the importer destructor
   return true;
@@ -399,21 +399,6 @@ void AssimpRenderer::setIdentityMatrix( float *mat,
   // fill diagonal with 1s
   for (int i = 0; i < size; ++i)
     mat[i + i * size] = 1.0f;
-}
-
-// Not quite optimal... recode with GLM lib ?
-void AssimpRenderer::multMatrix(float *a,
-                                float *b) {
-  float res[16];
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      res[j*4 + i] = 0.0f;
-      for (int k = 0; k < 4; ++k) {
-        res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
-      }
-    }
-  }
-  memcpy(a, res, 16 * sizeof(float));
 }
 
 // Defines a transformation matrix mat with a translation
@@ -561,6 +546,13 @@ void AssimpRenderer::renderScene(void) {
  */
 void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
 
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(-camera_pose[0], -camera_pose[1], -camera_pose[2]);
+  glScalef(scaleFactor, scaleFactor, scaleFactor);
+  glRotatef(90.f, 1.0, 0.0, 0.0);
+  glRotatef(180.f, 0.0, 1.0, 0.0);
+
   // FIXME : Still an issue with the translation of the modelview (?)
   glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
   pushMatrix();
@@ -602,7 +594,6 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
-
   // TODO: Handle automatically the opengl capabilities of the platform
   // OpengGL 2
   static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
@@ -628,10 +619,12 @@ GLuint AssimpRenderer::setupShaders() {
   free(fs);
 
   glCompileShader(v);
-  printOglError("AssimpRenderer", 711);
+  std::string title_str = "AssimpRenderer";
+  const char *title = title_str.c_str();
+  printOglError(title, 711);
 
   glCompileShader(f);
-  printOglError("AssimpRenderer", 714);
+  printOglError(title, 714);
 
   cout << "Shader info : " << endl;
   printShaderInfoLog(v);
@@ -668,7 +661,6 @@ GLuint AssimpRenderer::setupShaders() {
 
 // MODEL MATRIX
 //
-
 void AssimpRenderer::rotate(float angle, float x, float y, float z) {
   float aux[16];
   setRotationMatrix(aux,angle,x,y,z);
@@ -788,6 +780,21 @@ void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max) const{
   get_bounding_box_for_node(scene->mRootNode,min,max);
 }
 
+// Not quite optimal... recode with GLM lib ?
+void AssimpRenderer::multMatrix(float *a,
+                                float *b) {
+  float res[16];
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      res[j*4 + i] = 0.0f;
+      for (int k = 0; k < 4; ++k) {
+        res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
+      }
+    }
+  }
+  memcpy(a, res, 16 * sizeof(float));
+}
+
 void AssimpRenderer::normalize(float *a) {
 
   float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
@@ -822,7 +829,7 @@ void AssimpRenderer::printShaderInfoLog(GLuint obj)
   }
 }
 
-int AssimpRenderer::printOglError(char *file,
+int AssimpRenderer::printOglError(const char *file,
                                   int line)
 {
   GLenum glErr;
