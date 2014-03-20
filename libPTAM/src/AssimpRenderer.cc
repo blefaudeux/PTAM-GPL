@@ -546,6 +546,7 @@ void AssimpRenderer::renderScene(void) {
  */
 void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
 
+  // Set up the camera position, 'old style'
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glTranslatef(-camera_pose[0], -camera_pose[1], -camera_pose[2]);
@@ -604,7 +605,10 @@ GLuint AssimpRenderer::setupShaders() {
 //  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
 //  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
 
-//  handle_matrix_stack = true;
+//  // Custom shaders
+//  static const std::string vertexShaderFile = "vertexShader.vert";
+//  static const std::string fragmentShaderFile = "fragmentShader.frag";
+  handle_matrix_stack = false;
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());
@@ -640,6 +644,11 @@ GLuint AssimpRenderer::setupShaders() {
   glBindAttribLocation(p,vertexLoc,"position");
   glBindAttribLocation(p,normalLoc,"normal");
   glBindAttribLocation(p,texCoordLoc,"texCoord");
+
+  // Bind Material uniform buffer ?
+//  GLint glGetUniformLocation(GLuint program, const char *name);
+  glBindAttribLocation (p, 0, "materialUniLoc");
+// DEBUG
 
   glLinkProgram(p);
   glValidateProgram(p);

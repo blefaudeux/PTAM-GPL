@@ -1,6 +1,6 @@
 #version 130
 
-layout (std140) uniform Material {
+uniform Material {
 	vec4 diffuse;
 	vec4 ambient;
 	vec4 specular;
@@ -13,7 +13,6 @@ uniform	sampler2D texUnit;
 
 in vec3 Normal;
 in vec2 TexCoord;
-out vec4 output;
 
 void main()
 {
@@ -35,7 +34,7 @@ void main()
 		color = texture(texUnit, TexCoord);
 		amb = color * 0.33;
 	}
-	output = (color * intensity) + amb;
+	gl_FragColor = (color * intensity) + amb;
 	//output = vec4(texCount,0.0,0.0,1.0);
 }
 
