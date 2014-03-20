@@ -44,7 +44,6 @@ void main()
   
   gl_FrontColor = globalAmbient + NdotL * diffuse + ambient + specular;
   
-  /* ftransform() > gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex * 
-  gl_Position = ftransform(); /* Just apply the current modelview matrices. No more possible starting from glsl 1,4 */
+  gl_Position = ftransform();
 
 } 
