@@ -25,7 +25,7 @@ while keep_going:
 
     time.sleep(1)
     i_pict += 1
-    keep_going = (i_pict < 200)
+    keep_going = ((i_pict < 200) and Slam.IsAlive())
 
 del new_pose
-print ('Ending the computations')
+print ('Bye bye, good seeing you around')

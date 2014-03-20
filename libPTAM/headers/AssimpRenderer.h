@@ -137,7 +137,9 @@ public :
   // - render in an external FB
   void  renderSceneToFB(const float *camera_pose);
 
-private:
+private: 
+  bool handle_matrix_stack;
+
   // Model Matrix (part of the OpenGL Model View Matrix)
   float modelMatrix[16];
 
@@ -189,9 +191,9 @@ private:
 
   void get_bounding_box_for_node (const aiNode* nd,
                                   aiVector3D* min,
-                                  aiVector3D* max);
+                                  aiVector3D* max) const;
 
-  void get_bounding_box (aiVector3D* min, aiVector3D* max);
+  void get_bounding_box (aiVector3D* min, aiVector3D* max) const;
 
   // -- Model matrices operations --
   void pushMatrix(); // Push and Pop for modelMatrices

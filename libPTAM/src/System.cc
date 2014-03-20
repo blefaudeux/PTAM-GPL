@@ -13,7 +13,8 @@ using namespace std;
 using namespace GVars3;
 
 System::System()
-  : mGLWindow(mVideoSource.Size(), "PTAM")
+  : mGLWindow(mVideoSource.Size(), "PTAM"),
+    b_draw_gui(false)
 {
   GUI.RegisterCommand("exit", GUICommandCallBack, this);
   GUI.RegisterCommand("quit", GUICommandCallBack, this);
@@ -49,7 +50,8 @@ System::System()
   GUI.ParseLine("Menu.AddMenuToggle Root \"View Map\" DrawMap Root");
   GUI.ParseLine("Menu.AddMenuToggle Root \"Draw AR\" DrawAR Root");
   
-  mbDone = false;
+  b_done = false;
+  b_is_alive = false;
   ARDriver_initialized = false;
   AR_assets_filename = "";
 }
@@ -72,6 +74,8 @@ void System::resetMap(void) {
  */
 void System::Run()
 {
+  this->b_is_alive = true;
+
   if (!ARDriver_initialized) {
     // Initialize all the graphics here, so that it can be moved to a
     // seperate thread
@@ -81,7 +85,7 @@ void System::Run()
     ARDriver_initialized = true;
   }
 
-  while(!mbDone)
+  while(!b_done)
   {
     // We use two versions of each video frame:
     // One black and white (for processing by the tracker etc)
@@ -121,22 +125,27 @@ void System::Run()
 
     mGLWindow.DrawCaption(sCaption);
     mGLWindow.DrawMenus();
+
     mGLWindow.swap_buffers();
     mGLWindow.HandlePendingEvents();
   }
-
   cout << "Ending PTAM run" << endl;
+  this->b_is_alive = false;
+}
+
+bool System::isAlive(void) const {
+  return this->b_is_alive;
 }
 
 void System::GUICommandCallBack(void *ptr, string sCommand, string sParams)
 {
   if(sCommand=="quit" || sCommand == "exit")
-    static_cast<System*>(ptr)->mbDone = true;
+    static_cast<System*>(ptr)->b_done = true;
 }
 
 // A callable function to stop the computations
 void System::Stop() {
-  this->mbDone = true;
+  this->b_done = true;
 }
 
 /*!
@@ -167,14 +176,14 @@ void System::GetCurrentPose(double *pose) const {
   }
 }
 
-int System::GetCurrentKeyframes() {
+int System::GetCurrentKeyframes() const {
   return this->mpMap->vpKeyFrames.size();
 }
 
-int System::GetCurrentPoints() {
+int System::GetCurrentPoints() const {
   return this->mpMap->vpPoints.size();
 }
 
-int System::GetDiscardedPoints() {
+int System::GetDiscardedPoints(void) const {
   return this->mpMap->vpPointsTrash.size();
 }

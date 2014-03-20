@@ -81,181 +81,6 @@ AssimpRenderer::~AssimpRenderer()
   glDeleteBuffers(1,&matricesUniBuffer);
 }
 
-void AssimpRenderer::crossProduct( float *a, float *b, float *res) {
-
-  res[0] = a[1] * b[2]  -  b[1] * a[2];
-  res[1] = a[2] * b[0]  -  b[2] * a[0];
-  res[2] = a[0] * b[1]  -  b[0] * a[1];
-}
-
-// Normalize a vec3
-void AssimpRenderer::normalize(float *a) {
-
-  float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
-
-  a[0] /= mag;
-  a[1] /= mag;
-  a[2] /= mag;
-}
-
-// Handle the matrix stack (modelview)
-void AssimpRenderer::pushMatrix() {
-  float *aux = (float *)malloc(sizeof(float) * 16);
-  memcpy(aux, modelMatrix, sizeof(float) * 16);
-  matrixStack.push_back(aux);
-}
-
-void AssimpRenderer::popMatrix() {
-  float *m = matrixStack[matrixStack.size()-1];
-  memcpy(modelMatrix, m, sizeof(float) * 16);
-  matrixStack.pop_back();
-  free(m);
-}
-
-void AssimpRenderer::setIdentityMatrix( float *mat,
-                                        int size) {
-  // fill matrix with 0s
-  for (int i = 0; i < size * size; ++i)
-    mat[i] = 0.0f;
-
-  // fill diagonal with 1s
-  for (int i = 0; i < size; ++i)
-    mat[i + i * size] = 1.0f;
-}
-
-// Not quite optimal... recode with GLM lib ?
-void AssimpRenderer::multMatrix(float *a,
-                                float *b) {
-  float res[16];
-  for (int i = 0; i < 4; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      res[j*4 + i] = 0.0f;
-      for (int k = 0; k < 4; ++k) {
-        res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
-      }
-    }
-  }
-  memcpy(a, res, 16 * sizeof(float));
-}
-
-// Defines a transformation matrix mat with a translation
-void AssimpRenderer::setTranslationMatrix(float *mat,
-                                          float x,
-                                          float y,
-                                          float z) {
-  setIdentityMatrix(mat,4);
-  mat[12] = x;
-  mat[13] = y;
-  mat[14] = z;
-}
-
-// Defines a transformation matrix mat with a scale
-void AssimpRenderer::setScaleMatrix(float *mat,
-                                    float sx,
-                                    float sy,
-                                    float sz) {
-  setIdentityMatrix(mat,4);
-  mat[0] = sx;
-  mat[5] = sy;
-  mat[10] = sz;
-}
-
-// Defines a transformation matrix mat with a rotation
-// angle alpha and a rotation axis (x,y,z)
-void AssimpRenderer::setRotationMatrix(float *mat, float angle,
-                                       float x, float y, float z) {
-  float radAngle = DegToRad(angle);
-  float co = cos(radAngle);
-  float si = sin(radAngle);
-  float x2 = x*x;
-  float y2 = y*y;
-  float z2 = z*z;
-
-  mat[0] = x2 + (y2 + z2) * co;
-  mat[4] = x * y * (1 - co) - z * si;
-  mat[8] = x * z * (1 - co) + y * si;
-  mat[12]= 0.0f;
-
-  mat[1] = x * y * (1 - co) + z * si;
-  mat[5] = y2 + (x2 + z2) * co;
-  mat[9] = y * z * (1 - co) - x * si;
-  mat[13]= 0.0f;
-
-  mat[2] = x * z * (1 - co) - y * si;
-  mat[6] = y * z * (1 - co) + x * si;
-  mat[10]= z2 + (x2 + y2) * co;
-  mat[14]= 0.0f;
-
-  mat[3] = 0.0f;
-  mat[7] = 0.0f;
-  mat[11]= 0.0f;
-  mat[15]= 1.0f;
-}
-
-// MODEL MATRIX
-//
-void AssimpRenderer::setModelMatrix() {
-  glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
-  glBufferSubData(GL_UNIFORM_BUFFER,
-                  ModelMatrixOffset, MatrixSize, modelMatrix);
-  glBindBuffer(GL_UNIFORM_BUFFER,0);
-}
-
-void AssimpRenderer::translate(float x, float y, float z) {
-  float aux[16];
-  setTranslationMatrix(aux,x,y,z);
-  multMatrix(modelMatrix,aux);
-  setModelMatrix();
-}
-
-void AssimpRenderer::rotate(float angle, float x, float y, float z) {
-  float aux[16];
-  setRotationMatrix(aux,angle,x,y,z);
-  multMatrix(modelMatrix,aux);
-  setModelMatrix();
-}
-
-void AssimpRenderer::scale(float x, float y, float z) {
-  float aux[16];
-  setScaleMatrix(aux,x,y,z);
-  multMatrix(modelMatrix,aux);
-  setModelMatrix();
-}
-
-void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
-                                                aiVector3D* min,
-                                                aiVector3D* max)  {
-  aiMatrix4x4 prev;
-  unsigned int n = 0, t;
-
-  for (; n < nd->mNumMeshes; ++n) {
-    const aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
-    for (t = 0; t < mesh->mNumVertices; ++t) {
-
-      aiVector3D tmp = mesh->mVertices[t];
-
-      min->x = aisgl_min(min->x,tmp.x);
-      min->y = aisgl_min(min->y,tmp.y);
-      min->z = aisgl_min(min->z,tmp.z);
-
-      max->x = aisgl_max(max->x,tmp.x);
-      max->y = aisgl_max(max->y,tmp.y);
-      max->z = aisgl_max(max->z,tmp.z);
-    }
-  }
-
-  for (n = 0; n < nd->mNumChildren; ++n) {
-    get_bounding_box_for_node(nd->mChildren[n],min,max);
-  }
-}
-
-void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max)
-{
-  min->x = min->y = min->z =  1e10f;
-  max->x = max->y = max->z = -1e10f;
-  get_bounding_box_for_node(scene->mRootNode,min,max);
-}
-
 // Setup
 void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, float farp) {
 
@@ -277,180 +102,44 @@ void AssimpRenderer::buildProjectionMatrix(float fov, float ratio, float nearp, 
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 }
 
-void AssimpRenderer::setCamera(float posX, float posY, float posZ,
-                               float lookAtX, float lookAtY, float lookAtZ) {
 
-  float dir[3], right[3], up[3];
+void AssimpRenderer::crossProduct( float *a, float *b, float *res) {
 
-  up[0] = 0.0f;	up[1] = 1.0f;	up[2] = 0.0f;
-
-  dir[0] =  (lookAtX - posX);
-  dir[1] =  (lookAtY - posY);
-  dir[2] =  (lookAtZ - posZ);
-  normalize(dir);
-
-  crossProduct(dir,up,right);
-  normalize(right);
-
-  crossProduct(right,dir,up);
-  normalize(up);
-
-  float viewMatrix[16],aux[16];
-
-  viewMatrix[0]  = right[0];
-  viewMatrix[4]  = right[1];
-  viewMatrix[8]  = right[2];
-  viewMatrix[12] = 0.0f;
-
-  viewMatrix[1]  = up[0];
-  viewMatrix[5]  = up[1];
-  viewMatrix[9]  = up[2];
-  viewMatrix[13] = 0.0f;
-
-  viewMatrix[2]  = -dir[0];
-  viewMatrix[6]  = -dir[1];
-  viewMatrix[10] = -dir[2];
-  viewMatrix[14] =  0.0f;
-
-  viewMatrix[3]  = 0.0f;
-  viewMatrix[7]  = 0.0f;
-  viewMatrix[11] = 0.0f;
-  viewMatrix[15] = 1.0f;
-
-  setTranslationMatrix(aux, -posX, -posY, -posZ);
-
-  multMatrix(viewMatrix, aux);
-
-  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
-  glBufferSubData(GL_UNIFORM_BUFFER, ViewMatrixOffset, MatrixSize, viewMatrix);
-  glBindBuffer(GL_UNIFORM_BUFFER,0);
+  res[0] = a[1] * b[2]  -  b[1] * a[2];
+  res[1] = a[2] * b[0]  -  b[2] * a[0];
+  res[2] = a[0] * b[1]  -  b[0] * a[1];
 }
 
-// Parse the Model file
-bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
-
-  //check if file exists
-  std::ifstream fin(pFile.c_str());
-  if(!fin.fail()) {
-    fin.close();
-  } else{
-    cout << "Couldn't open file: "<< pFile.c_str() << endl;
-    cout << importer->GetErrorString() << endl;
-    return false;
-  }
-
-  // Import the scene using Assimp C++ API
-  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
-  cout << "AssimpRenderer : Scene " << pFile << " import is OK" << endl;
-
-  // If the import failed, report it
-  if( !scene) {
-    cout << importer->GetErrorString() << endl;
-    return false;
-  }
-
-  // Now we can access the file's contents.
-  aiVector3D scene_min, scene_max;
-  get_bounding_box(&scene_min, &scene_max);
-  float tmp;
-  tmp = scene_max.x-scene_min.x;
-  cout << "AssimpRenderer : Model scale " << tmp << endl;
-  tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
-  tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
-  scaleFactor = 1.f / (10*tmp);
-
-  // We're done. Everything will be cleaned up by the importer destructor
-  return true;
-}
-
-int AssimpRenderer::loadGLTextures(const aiScene* scene)
+// Model loading and OpenGL setup
+bool AssimpRenderer::init()
 {
-  ILboolean success;
-
-  /* initialization of DevIL */
-  ilInit();
-
-  /* scan scene's materials for textures */
-  for (unsigned int m=0; m<scene->mNumMaterials; ++m)   {
-    int texIndex = 0;
-    aiString path;
-    aiReturn texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-
-    while (texFound == AI_SUCCESS) {
-      //fill map with textures, OpenGL image ids set to 0
-      textureIdMap[path.data] = 0;
-      // more textures?
-      texIndex++;
-      texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-    }
+  // Load a model if needed
+  if (modelname.empty()) {
+    cout << "AssimpRenderer: No model defined, quitting" << endl;
+    return false;
   }
 
-  int numTextures = textureIdMap.size();
-  cout << "AssimpRenderer : loaded " << numTextures << " textures." << endl;
+  import3DFromFile(modelname); // defines Assimp "scene"
+  loadGLTextures(scene);
+  cout << "AssimpRenderer: Model loaded" << endl;
 
-  /* create and fill array with DevIL texture ids */
-  ILuint* imageIds = new ILuint[numTextures];
-  ilGenImages(numTextures, imageIds);
+  program = setupShaders();
+  genVAOsAndUniformBuffer(scene); // Generate Vertex Arrays Objects and buffers
 
-  /* create and fill array with GL texture ids */
-  GLuint* textureIds = new GLuint[numTextures];
-  glGenTextures(numTextures, textureIds); /* Texture name generation */
+  glEnable(GL_DEPTH_TEST);
+  glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
-  /* get iterator */
-  std::map<std::string, GLuint>::iterator itr = textureIdMap.begin();
-  int i=0;
-  for (; itr != textureIdMap.end(); ++i, ++itr)
-  {
-    //save IL image ID
-    std::string filename = (*itr).first;  // get filename
-    (*itr).second = textureIds[i];        // save texture id for filename in map
+  glGenBuffers(1,&matricesUniBuffer);
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
+  glBufferData(GL_UNIFORM_BUFFER, MatricesUniBufferSize,NULL,GL_DYNAMIC_DRAW);
+  glBindBufferRange(GL_UNIFORM_BUFFER, matricesUniLoc, matricesUniBuffer, 0, MatricesUniBufferSize);
+  glBindBuffer(GL_UNIFORM_BUFFER,0);
+  glEnable(GL_MULTISAMPLE);
 
-    ilBindImage(imageIds[i]); /* Binding of DevIL image name */
-    ilEnable(IL_ORIGIN_SET);
-    ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
-    success = ilLoadImage((ILstring)filename.c_str());
-
-    if (success) {
-      /* Convert image to RGBA */
-      ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-
-      /* Create and load textures to OpenGL */
-      glBindTexture(GL_TEXTURE_2D, textureIds[i]);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH),
-                   ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                   ilGetData());
-    }
-    else
-      printf("Couldn't load Image: %s\n", filename.c_str());
-  }
-  /* Because we have already copied image data into texture data
-    we can release memory used by image. */
-  ilDeleteImages(numTextures, imageIds);
-
-  //Cleanup
-  delete [] imageIds;
-  delete [] textureIds;
-
-  //return success;
+  cout << "AssimpRenderer: Initialized" << endl;
   return true;
 }
 
-void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d) {
-  f[0] = a;
-  f[1] = b;
-  f[2] = c;
-  f[3] = d;
-}
-
-void AssimpRenderer::color4_to_float4(const aiColor4D *c,
-                                      float f[4]) {
-  f[0] = c->r;
-  f[1] = c->g;
-  f[2] = c->b;
-  f[3] = c->a;
-}
 
 void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
   struct MyMesh aMesh;
@@ -575,12 +264,219 @@ void AssimpRenderer::genVAOsAndUniformBuffer(const aiScene *sc) {
   }
 }
 
+
+// Parse the Model file
+bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
+
+  //check if file exists
+  std::ifstream fin(pFile.c_str());
+  if(!fin.fail()) {
+    fin.close();
+  } else{
+    cout << "Couldn't open file: "<< pFile.c_str() << endl;
+    cout << importer->GetErrorString() << endl;
+    return false;
+  }
+
+  // Import the scene using Assimp C++ API
+  scene = importer->ReadFile(pFile, aiProcessPreset_TargetRealtime_Quality);
+  cout << "AssimpRenderer : Scene " << pFile << " import is OK" << endl;
+
+  // If the import failed, report it
+  if( !scene) {
+    cout << importer->GetErrorString() << endl;
+    return false;
+  }
+
+  // Now we can access the file's contents.
+  aiVector3D scene_min, scene_max;
+  get_bounding_box(&scene_min, &scene_max);
+  float tmp;
+  tmp = scene_max.x-scene_min.x;
+  cout << "AssimpRenderer : Model scale " << tmp << endl;
+  tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
+  tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
+  scaleFactor = 1.f / (100 * tmp);
+
+  // We're done. Everything will be cleaned up by the importer destructor
+  return true;
+}
+
+int AssimpRenderer::loadGLTextures(const aiScene* scene)
+{
+  ILboolean success;
+
+  /* initialization of DevIL */
+  ilInit();
+
+  /* scan scene's materials for textures */
+  for (unsigned int m=0; m<scene->mNumMaterials; ++m)   {
+    int texIndex = 0;
+    aiString path;
+    aiReturn texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+
+    while (texFound == AI_SUCCESS) {
+      //fill map with textures, OpenGL image ids set to 0
+      textureIdMap[path.data] = 0;
+      // more textures?
+      texIndex++;
+      texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+    }
+  }
+
+  int numTextures = textureIdMap.size();
+  cout << "AssimpRenderer : loaded " << numTextures << " textures." << endl;
+
+  /* create and fill array with DevIL texture ids */
+  ILuint* imageIds = new ILuint[numTextures];
+  ilGenImages(numTextures, imageIds);
+
+  /* create and fill array with GL texture ids */
+  GLuint* textureIds = new GLuint[numTextures];
+  glGenTextures(numTextures, textureIds); /* Texture name generation */
+
+  /* get iterator */
+  std::map<std::string, GLuint>::iterator itr = textureIdMap.begin();
+  int i=0;
+  for (; itr != textureIdMap.end(); ++i, ++itr)
+  {
+    //save IL image ID
+    std::string filename = (*itr).first;  // get filename
+    (*itr).second = textureIds[i];        // save texture id for filename in map
+
+    ilBindImage(imageIds[i]); /* Binding of DevIL image name */
+    ilEnable(IL_ORIGIN_SET);
+    ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+    success = ilLoadImage((ILstring)filename.c_str());
+
+    if (success) {
+      /* Convert image to RGBA */
+      ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+
+      /* Create and load textures to OpenGL */
+      glBindTexture(GL_TEXTURE_2D, textureIds[i]);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ilGetInteger(IL_IMAGE_WIDTH),
+                   ilGetInteger(IL_IMAGE_HEIGHT), 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                   ilGetData());
+    }
+    else
+      printf("Couldn't load Image: %s\n", filename.c_str());
+  }
+  /* Because we have already copied image data into texture data
+    we can release memory used by image. */
+  ilDeleteImages(numTextures, imageIds);
+
+  //Cleanup
+  delete [] imageIds;
+  delete [] textureIds;
+
+  //return success;
+  return true;
+}
+
+// Handle the matrix stack (modelview)
+void AssimpRenderer::pushMatrix() {
+  float *aux = (float *)malloc(sizeof(float) * 16);
+  memcpy(aux, modelMatrix, sizeof(float) * 16);
+  matrixStack.push_back(aux);
+}
+
+void AssimpRenderer::popMatrix() {
+  float *m = matrixStack[matrixStack.size()-1];
+  memcpy(modelMatrix, m, sizeof(float) * 16);
+  matrixStack.pop_back();
+  free(m);
+}
+
+void AssimpRenderer::setIdentityMatrix( float *mat,
+                                        int size) {
+  // fill matrix with 0s
+  for (int i = 0; i < size * size; ++i)
+    mat[i] = 0.0f;
+
+  // fill diagonal with 1s
+  for (int i = 0; i < size; ++i)
+    mat[i + i * size] = 1.0f;
+}
+
+// Not quite optimal... recode with GLM lib ?
+void AssimpRenderer::multMatrix(float *a,
+                                float *b) {
+  float res[16];
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      res[j*4 + i] = 0.0f;
+      for (int k = 0; k < 4; ++k) {
+        res[j*4 + i] += a[k*4 + i] * b[j*4 + k];
+      }
+    }
+  }
+  memcpy(a, res, 16 * sizeof(float));
+}
+
+// Defines a transformation matrix mat with a translation
+void AssimpRenderer::setTranslationMatrix(float *mat,
+                                          float x,
+                                          float y,
+                                          float z) {
+  setIdentityMatrix(mat,4);
+  mat[12] = x;
+  mat[13] = y;
+  mat[14] = z;
+}
+
+// Defines a transformation matrix mat with a scale
+void AssimpRenderer::setScaleMatrix(float *mat,
+                                    float sx,
+                                    float sy,
+                                    float sz) {
+  setIdentityMatrix(mat,4);
+  mat[0] = sx;
+  mat[5] = sy;
+  mat[10] = sz;
+}
+
+// Defines a transformation matrix mat with a rotation
+// angle alpha and a rotation axis (x,y,z)
+void AssimpRenderer::setRotationMatrix(float *mat, float angle,
+                                       float x, float y, float z) {
+  float radAngle = DegToRad(angle);
+  float co = cos(radAngle);
+  float si = sin(radAngle);
+  float x2 = x*x;
+  float y2 = y*y;
+  float z2 = z*z;
+
+  mat[0] = x2 + (y2 + z2) * co;
+  mat[4] = x * y * (1 - co) - z * si;
+  mat[8] = x * z * (1 - co) + y * si;
+  mat[12]= 0.0f;
+
+  mat[1] = x * y * (1 - co) + z * si;
+  mat[5] = y2 + (x2 + z2) * co;
+  mat[9] = y * z * (1 - co) - x * si;
+  mat[13]= 0.0f;
+
+  mat[2] = x * z * (1 - co) - y * si;
+  mat[6] = y * z * (1 - co) + x * si;
+  mat[10]= z2 + (x2 + y2) * co;
+  mat[14]= 0.0f;
+
+  mat[3] = 0.0f;
+  mat[7] = 0.0f;
+  mat[11]= 0.0f;
+  mat[15]= 1.0f;
+}
+
 // Render Assimp Model
 void AssimpRenderer::recursiveRender (const aiScene *sc,
                                       const aiNode* nd)
 {
   // Get node transformation matrix
   aiMatrix4x4 m = nd->mTransformation;
+
   m.Transpose();    // OpenGL matrices are column major
   pushMatrix();     // save model matrix and apply node transformation
 
@@ -588,6 +484,7 @@ void AssimpRenderer::recursiveRender (const aiScene *sc,
   memcpy(aux,&m,sizeof(float) * 16);
   multMatrix(modelMatrix, aux);
   setModelMatrix();
+
 
   // Draw all meshes assigned to this node
   for (unsigned int n=0; n < nd->mNumMeshes; ++n){
@@ -667,6 +564,7 @@ void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
   // FIXME : Still an issue with the translation of the modelview (?)
   glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
   pushMatrix();
+  scale(scaleFactor, scaleFactor, scaleFactor);
   setModelMatrix();
 
   float pm[16];
@@ -675,9 +573,15 @@ void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
   glBufferSubData(GL_UNIFORM_BUFFER, ProjMatrixOffset, MatrixSize, pm);
   glBindBuffer(GL_UNIFORM_BUFFER,0);
 
+  float vm[16];
+  setIdentityMatrix(vm,4);
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
+  glBufferSubData(GL_UNIFORM_BUFFER, ViewMatrixOffset, MatrixSize, vm);
+  glBindBuffer(GL_UNIFORM_BUFFER,0);
+
   // Render all the models' nodes
   glUseProgram(program);
-  glUniform1i(texUnit,0); // FIXME: issue with the textures, no rendering..
+  glUniform1i(texUnit,0); // FIXME: possible issue with the textures, no rendering..
 
   if (NULL != scene) {
     recursiveRender(scene, scene->mRootNode);
@@ -698,8 +602,18 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
+
+  // TODO: Handle automatically the opengl capabilities of the platform
+  // OpengGL 2
   static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
   static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
+  handle_matrix_stack = false;
+
+//  // OpenGL 3,3 and above
+//  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
+//  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+
+//  handle_matrix_stack = true;
 
   vs = textFileRead(vertexShaderFile.c_str());
   fs = textFileRead(fragmentShaderFile.c_str());
@@ -752,34 +666,142 @@ GLuint AssimpRenderer::setupShaders() {
   return(p);
 }
 
-// Model loading and OpenGL setup
-bool AssimpRenderer::init()
-{
-  // Load a model if needed
-  if (modelname.empty()) {
-    cout << "AssimpRenderer: No model defined, quitting" << endl;
-    return false;
+// MODEL MATRIX
+//
+
+void AssimpRenderer::rotate(float angle, float x, float y, float z) {
+  float aux[16];
+  setRotationMatrix(aux,angle,x,y,z);
+  multMatrix(modelMatrix,aux);
+  setModelMatrix();
+}
+
+void AssimpRenderer::scale(float x, float y, float z) {
+  float aux[16];
+  setScaleMatrix(aux,x,y,z);
+  multMatrix(modelMatrix,aux);
+  setModelMatrix();
+}
+
+void AssimpRenderer::setModelMatrix() {
+  glBindBuffer(GL_UNIFORM_BUFFER,matricesUniBuffer);
+  glBufferSubData(GL_UNIFORM_BUFFER,
+                  ModelMatrixOffset, MatrixSize, modelMatrix);
+  glBindBuffer(GL_UNIFORM_BUFFER,0);
+}
+
+void AssimpRenderer::setCamera(float posX, float posY, float posZ,
+                               float lookAtX, float lookAtY, float lookAtZ) {
+
+  float dir[3], right[3], up[3];
+
+  up[0] = 0.0f;	up[1] = 1.0f;	up[2] = 0.0f;
+
+  dir[0] =  (lookAtX - posX);
+  dir[1] =  (lookAtY - posY);
+  dir[2] =  (lookAtZ - posZ);
+  normalize(dir);
+
+  crossProduct(dir,up,right);
+  normalize(right);
+
+  crossProduct(right,dir,up);
+  normalize(up);
+
+  float viewMatrix[16],aux[16];
+
+  viewMatrix[0]  = right[0];
+  viewMatrix[4]  = right[1];
+  viewMatrix[8]  = right[2];
+  viewMatrix[12] = 0.0f;
+
+  viewMatrix[1]  = up[0];
+  viewMatrix[5]  = up[1];
+  viewMatrix[9]  = up[2];
+  viewMatrix[13] = 0.0f;
+
+  viewMatrix[2]  = -dir[0];
+  viewMatrix[6]  = -dir[1];
+  viewMatrix[10] = -dir[2];
+  viewMatrix[14] =  0.0f;
+
+  viewMatrix[3]  = 0.0f;
+  viewMatrix[7]  = 0.0f;
+  viewMatrix[11] = 0.0f;
+  viewMatrix[15] = 1.0f;
+
+  setTranslationMatrix(aux, -posX, -posY, -posZ);
+
+  multMatrix(viewMatrix, aux);
+
+  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
+  glBufferSubData(GL_UNIFORM_BUFFER, ViewMatrixOffset, MatrixSize, viewMatrix);
+  glBindBuffer(GL_UNIFORM_BUFFER,0);
+}
+
+void AssimpRenderer::translate(float x, float y, float z) {
+  float aux[16];
+  setTranslationMatrix(aux,x,y,z);
+  multMatrix(modelMatrix,aux);
+  setModelMatrix();
+}
+
+// -- Support functions
+void AssimpRenderer::color4_to_float4(const aiColor4D *c,
+                                      float f[4]) {
+  f[0] = c->r;
+  f[1] = c->g;
+  f[2] = c->b;
+  f[3] = c->a;
+}
+
+void AssimpRenderer::get_bounding_box_for_node (const aiNode* nd,
+                                                aiVector3D* min,
+                                                aiVector3D* max) const {
+  aiMatrix4x4 prev;
+  unsigned int n = 0, t;
+
+  for (; n < nd->mNumMeshes; ++n) {
+    const aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+    for (t = 0; t < mesh->mNumVertices; ++t) {
+
+      aiVector3D tmp = mesh->mVertices[t];
+
+      min->x = aisgl_min(min->x,tmp.x);
+      min->y = aisgl_min(min->y,tmp.y);
+      min->z = aisgl_min(min->z,tmp.z);
+
+      max->x = aisgl_max(max->x,tmp.x);
+      max->y = aisgl_max(max->y,tmp.y);
+      max->z = aisgl_max(max->z,tmp.z);
+    }
   }
 
-  import3DFromFile(modelname); // defines Assimp "scene"
-  loadGLTextures(scene);
-  cout << "AssimpRenderer: Model loaded" << endl;
+  for (n = 0; n < nd->mNumChildren; ++n) {
+    get_bounding_box_for_node(nd->mChildren[n],min,max);
+  }
+}
 
-  program = setupShaders();
-  genVAOsAndUniformBuffer(scene); // Generate Vertex Arrays Objects and buffers
+void AssimpRenderer::get_bounding_box (aiVector3D* min, aiVector3D* max) const{
+  min->x = min->y = min->z =  1e10f;
+  max->x = max->y = max->z = -1e10f;
+  get_bounding_box_for_node(scene->mRootNode,min,max);
+}
 
-  glEnable(GL_DEPTH_TEST);
-  glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+void AssimpRenderer::normalize(float *a) {
 
-  glGenBuffers(1,&matricesUniBuffer);
-  glBindBuffer(GL_UNIFORM_BUFFER, matricesUniBuffer);
-  glBufferData(GL_UNIFORM_BUFFER, MatricesUniBufferSize,NULL,GL_DYNAMIC_DRAW);
-  glBindBufferRange(GL_UNIFORM_BUFFER, matricesUniLoc, matricesUniBuffer, 0, MatricesUniBufferSize);
-  glBindBuffer(GL_UNIFORM_BUFFER,0);
-  glEnable(GL_MULTISAMPLE);
+  float mag = sqrt(a[0] * a[0]  +  a[1] * a[1]  +  a[2] * a[2]);
 
-  cout << "AssimpRenderer: Initialized" << endl;
-  return true;
+  a[0] /= mag;
+  a[1] /= mag;
+  a[2] /= mag;
+}
+
+void AssimpRenderer::set_float4(float f[4], float a, float b, float c, float d) {
+  f[0] = a;
+  f[1] = b;
+  f[2] = c;
+  f[3] = d;
 }
 
 // -- Print logs.. --

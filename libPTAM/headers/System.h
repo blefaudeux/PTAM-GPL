@@ -30,29 +30,37 @@ class System
 public:
   System();
   void  GetCurrentPose(double *pose) const;
+  int   GetCurrentKeyframes(void) const;
+  int   GetCurrentPoints(void) const;
+  int   GetDiscardedPoints(void) const;
   void  Run();
   void  Stop();
-  int   GetCurrentKeyframes();
-  int   GetCurrentPoints();
-  int   GetDiscardedPoints();
   bool  setARModel(const std::string model_file);
-  void  resetMap();
+  void  resetMap(void);
+  bool  isAlive(void) const;
 
 private:
+  bool b_done;
+  bool b_is_alive;
+
+  // Handle GUI
+  bool b_draw_gui;
   VideoSource mVideoSource;
-  GLWindow2 mGLWindow;
+  GLWindow2   mGLWindow;
   CVD::Image<CVD::Rgb<CVD::byte> > mimFrameRGB;
   CVD::Image<CVD::byte> mimFrameBW;
   
   boost::thread *sys_thread;
-  Map *mpMap; 
-  MapMaker *mpMapMaker; 
-  Tracker *mpTracker; 
-  ATANCamera *mpCamera;
-  ARDriver *mpARDriver;
-  MapViewer *mpMapViewer;
-  
-  bool mbDone;
+
+  // SLAM part
+  Map         *mpMap;
+  MapMaker    *mpMapMaker;
+  Tracker     *mpTracker;
+  ATANCamera  *mpCamera;
+  MapViewer   *mpMapViewer;
+
+  // AR part
+  ARDriver    *mpARDriver;
   bool ARDriver_initialized;
   std::string AR_assets_filename;
 

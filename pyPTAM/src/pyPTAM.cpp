@@ -49,7 +49,6 @@ public :
     }
 
     sys_thread->join();
-    cout << "PTAM thread returned" << endl;
   }
 
   /*!
@@ -60,8 +59,8 @@ public :
     // Read the settings
     cout << "  Parsing " <<  config_file << " and console" <<  endl;
     GUI.LoadFile(config_file);
-    GUI.StartParserThread(); // Start parsing of the console input
-    atexit(GUI.StopParserThread);
+//    GUI.StartParserThread(); // Start parsing of the console input
+//    atexit(GUI.StopParserThread);
 
     // Build the new context
     s = new System();
@@ -76,8 +75,6 @@ public :
     is_slam_started = true;
     cout << "Starting computations" << endl;
     s->Run();
-
-    // TODO : quit the Python VM if the function returned..
   }
 
   /*!
@@ -129,6 +126,13 @@ public :
       return s->GetDiscardedPoints();
     else
       return 0;
+  }
+
+  bool IsAlive() {
+    if (is_slam_started)
+      return s->isAlive();
+    else
+      return false;
   }
 
   /*!
@@ -187,5 +191,6 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
       .def("LoadARModel",         &pyPTAM::LoadARModel)
       .def("ResetMap",            &pyPTAM::ResetMap)
+      .def("IsAlive",             &pyPTAM::IsAlive)
       ;
 }

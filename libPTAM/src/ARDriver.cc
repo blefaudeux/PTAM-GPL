@@ -8,7 +8,11 @@ using namespace std;
 
 static bool CheckFramebufferStatus();
 
-ARDriver::ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
+inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out);
+
+ARDriver::ARDriver(const ATANCamera &cam,
+                   ImageRef irFrameSize,
+                   GLWindow2 &glw,
                    std::string ARSceneFile)
   :mCamera(cam), mGLWindow(glw)
 {
@@ -65,10 +69,7 @@ void ARDriver::Reset()  {
 }
 
 
-inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
-  for (int i=0; i<3; ++i)
-    vec_out[i] = vec_in[i];
-}
+
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
                       SE3<> se3CfromW)  {
@@ -172,17 +173,6 @@ void ARDriver::MakeFrameBuffer()
   // Unbind framebuffers (bind to 0)
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
   cout << "  ARDriver: FBO.allocated" << endl;
-}
-
-static bool CheckFramebufferStatus()  {
-  GLenum n;
-  n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-
-  if(n == GL_FRAMEBUFFER_COMPLETE_EXT)
-    return true; // All good
-  
-  cout << "glCheckFrameBufferStatusExt returned an error." << endl;
-  return false;
 }
 
 void ARDriver::DrawFBBackGround() {
@@ -329,3 +319,20 @@ void ARDriver::DrawFadingGrid()
   };
 }
 
+// -- Support functions
+
+inline void VectorToFloatArray(const Vector<3> vec_in, float *vec_out) {
+  for (int i=0; i<3; ++i)
+    vec_out[i] = vec_in[i];
+}
+
+static bool CheckFramebufferStatus()  {
+  GLenum n;
+  n = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+
+  if(n == GL_FRAMEBUFFER_COMPLETE_EXT)
+    return true; // All good
+
+  cout << "glCheckFrameBufferStatusExt returned an error." << endl;
+  return false;
+}
