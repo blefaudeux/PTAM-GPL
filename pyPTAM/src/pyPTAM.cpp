@@ -60,9 +60,8 @@ public :
     // Read the settings
     cout << "  Parsing " <<  config_file << " and console" <<  endl;
     GUI.LoadFile(config_file);
-
-//    GUI.StartParserThread(); // Start parsing of the console input
-//    atexit(GUI.StopParserThread);
+    GUI.StartParserThread(); // Start parsing of the console input
+    atexit(GUI.StopParserThread);
 
     // Build the new context
     s = new System();
@@ -133,17 +132,6 @@ public :
   }
 
   /*!
-   * \brief SlamAlive : See if the SLAM thread is still alive
-   * \return
-   */
-  bool SlamAlive(){
-    if (is_slam_started)
-      return s->isSlamAlive();
-    else
-      return false;
-  }
-
-  /*!
    * \brief LoadARModel : setup the file describing the 3D model used for AR
    * \param model_file (handled by ASSIMP, see compatible types)
    */
@@ -197,7 +185,6 @@ BOOST_PYTHON_MODULE(libpyPTAM)
       .def("GetCurrentKeyframes", &pyPTAM::GetCurrentKeyframes)
       .def("GetCurrentPoints",    &pyPTAM::GetCurrentPoints)
       .def("GetDiscardedPoints",  &pyPTAM::GetDiscardedPoints)
-      .def("SlamAlive",           &pyPTAM::SlamAlive)
       .def("LoadARModel",         &pyPTAM::LoadARModel)
       .def("ResetMap",            &pyPTAM::ResetMap)
       ;

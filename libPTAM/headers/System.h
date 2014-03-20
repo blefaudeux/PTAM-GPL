@@ -29,13 +29,12 @@ class System
 {
 public:
   System();
+  void  GetCurrentPose(double *pose) const;
   void  Run();
   void  Stop();
-  void  GetCurrentPose(double *pose) const;
-  int   GetCurrentKeyframes()const ;
-  int   GetCurrentPoints() const;
-  int   GetDiscardedPoints() const;
-  bool  isSlamAlive(void) const;
+  int   GetCurrentKeyframes();
+  int   GetCurrentPoints();
+  int   GetDiscardedPoints();
   bool  setARModel(const std::string model_file);
   void  resetMap();
 
@@ -54,7 +53,6 @@ private:
   MapViewer *mpMapViewer;
   
   bool mbDone;
-  bool isAlive;
   bool ARDriver_initialized;
   std::string AR_assets_filename;
 
