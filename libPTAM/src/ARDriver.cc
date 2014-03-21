@@ -69,7 +69,8 @@ void ARDriver::Reset()  {
 }
 
 void ARDriver::Render(Image<Rgb<byte> > &imFrame,
-                      SE3<> se3CfromW)  {
+                      SE3<> se3CfromW,
+                      bool render_3D_model)  {
   if(!mbInitialised)  {
     Init();
     Reset();
@@ -101,34 +102,36 @@ void ARDriver::Render(Image<Rgb<byte> > &imFrame,
   glClearDepth(1);
   glClear(GL_DEPTH_BUFFER_BIT);
   
-  // Set up 3D projection
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100)); // Define near and far cutoffs
-  glMultMatrix(se3CfromW);
-  
-  // Draw the base 3D stuff
-  DrawFadingGrid();
+  if (render_3D_model) {
+    // Set up 3D projection
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glMultMatrix(mCamera.MakeUFBLinearFrustumMatrix(0.005, 100)); // Define near and far cutoffs
+    glMultMatrix(se3CfromW);
 
-  if (useEyeGame) {
-    mGame.DrawStuff(se3CfromW.inverse().get_translation());
-  } else {
-    // Call the Assimp renderer to add the loaded 3D model to the scene
-    if (NULL != target_model) {
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glMultMatrix(se3CfromW.inverse());
+    // Draw the base 3D stuff
+    DrawFadingGrid();
 
-      Vector<3> cam_pose = se3CfromW.inverse().get_translation();
-      float f_cam_pose[3];
-      VectorToFloatArray(cam_pose, &f_cam_pose[0]);
+    if (useEyeGame) {
+      mGame.DrawStuff(se3CfromW.inverse().get_translation());
+    } else {
+      // Call the Assimp renderer to add the loaded 3D model to the scene
+      if (NULL != target_model) {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glMultMatrix(se3CfromW.inverse());
 
-      target_model->renderSceneToFB(&f_cam_pose[0]);
+        Vector<3> cam_pose = se3CfromW.inverse().get_translation();
+        float f_cam_pose[3];
+        VectorToFloatArray(cam_pose, &f_cam_pose[0]);
+
+        target_model->renderSceneToFB(&f_cam_pose[0]);
+      }
     }
+    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
   }
-  glDisable(GL_DEPTH_TEST);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_BLEND);
 
   // Set up for drawing 2D stuff:
   glMatrixMode(GL_MODELVIEW);

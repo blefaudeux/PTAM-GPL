@@ -51,6 +51,7 @@ public:
   void AutomatedMapStart(void);
 
   inline SE3<> GetCurrentPose() const { return mse3CamFromWorld;}
+  inline int GetLostFrames() const { return mnLostFrames;}
   
   // Gets messages to be printed on-screen for the user.
   std::string GetMessageForUser();

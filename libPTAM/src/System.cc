@@ -116,7 +116,7 @@ void System::Run()
     if(bDrawMap)
       mpMapViewer->DrawMap(mpTracker->GetCurrentPose());
     else if(bDrawAR)
-      mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose());
+      mpARDriver->Render(mimFrameRGB, mpTracker->GetCurrentPose(), (mpTracker->GetLostFrames()<3));
 
     // Draw the menu and captions
     string sCaption;
