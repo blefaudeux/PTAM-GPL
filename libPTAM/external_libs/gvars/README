@@ -1,0 +1,1 @@
+Striped down GVars library files from Georg Klein and Edward Rosten (see E. Rosten Github repo), so that all of PTAM can be compiled in one row.

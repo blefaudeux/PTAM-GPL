@@ -58,6 +58,7 @@ public:
   
 protected:
   bool b_automated_start;
+  bool b_ongoing_optimisation;
 
   KeyFrame mCurrentKF;            // The current working frame as a keyframe struct
 

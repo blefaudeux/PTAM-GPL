@@ -24,5 +24,5 @@ message("TooN found in: \n ${TOON_INCLUDE_DIR}\n")
 # Recurse into the "libPTAM" and "camera_calibrator" subdirectories. This does not actually 
 # cause another cmake executable to run. The same process will walk through 
 # the project's entire directory structure.
-add_subdirectory(camera_calibrator)
 add_subdirectory(libPTAM)
+add_subdirectory(camera_calibrator)

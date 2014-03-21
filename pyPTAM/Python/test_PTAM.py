@@ -6,7 +6,7 @@ import time
 Slam = libpyPTAM.pyPTAM('microsoft.cfg', False)
 
 # Load the 3D Model
-Slam.LoadARModel('bench.obj')
+Slam.LoadARModel('Lego.3ds')
 
 # Start the Process:
 Slam.Start()
