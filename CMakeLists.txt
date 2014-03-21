@@ -12,14 +12,11 @@ find_package(Boost COMPONENTS system thread REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(LAPACK REQUIRED)
-find_package(CVD REQUIRED)
-find_package(GVars3 REQUIRED)
-find_package(TooN REQUIRED)
 find_package(DevIL REQUIRED)
 
-message("\nGVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
-message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")
-message("TooN found in: \n ${TOON_INCLUDE_DIR}\n")
+#message("\nGVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
+#message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")
+#message("TooN found in: \n ${TOON_INCLUDE_DIR}\n")
 
 # Recurse into the "libPTAM" and "camera_calibrator" subdirectories. This does not actually 
 # cause another cmake executable to run. The same process will walk through 

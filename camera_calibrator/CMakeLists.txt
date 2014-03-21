@@ -45,8 +45,8 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Build the executable
-ADD_EXECUTABLE(CamCalibrator ${SRC} ${HEADERS})
-TARGET_LINK_LIBRARIES(CamCalibrator PTAMs  ${OPENGL_LIBRARIES} ${PTAM_LIBRARY})
+add_executable(CamCalibrator ${SRC} ${HEADERS})
+target_link_libraries(CamCalibrator PTAMs  ${OPENGL_LIBRARIES} ${PTAM_LIBRARY})
 
 ### Define the installation procedure
 #install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)

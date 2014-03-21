@@ -445,7 +445,7 @@ Copyright (C) 2010 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/benjamin/Git/gvars'
+ac_pwd='/home/benjamin/Git/PTAM-GPL/libPTAM/external_libs/gvars'
 srcdir='.'
 AWK='mawk'
 test -n "$AWK" || AWK=awk
@@ -626,7 +626,7 @@ S["XMKMF"]=""
 S["guiobj"]="GUI_none"
 S["a"]=""
 S["have_readline"]=""
-S["have_toon"]=""
+S["have_toon"]="yes"
 S["osx_hacks"]=""
 S["host_os"]="linux-gnu"
 S["host_vendor"]="unknown"
@@ -743,6 +743,8 @@ D["HAVE_INTTYPES_H"]=" 1"
 D["HAVE_STDINT_H"]=" 1"
 D["HAVE_UNISTD_H"]=" 1"
 D["HAVE_IOSTREAM"]=" 1"
+D["GVARS3_HAVE_TOON"]=" 1"
+D["GVARS3_HAVE_TOON2"]=" 1"
   for (key in D) D_is_set[key] = 1
   FS = ""
 }

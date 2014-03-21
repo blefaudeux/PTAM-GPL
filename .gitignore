@@ -1,6 +1,7 @@
 *.user
 *.so
 *.a
+*.o
 *.autosave
 *.idea
 build
