@@ -546,6 +546,9 @@ void AssimpRenderer::renderScene(void) {
  */
 void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
 
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_CULL_FACE);
+
   // Set up the camera position, 'old style'
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -557,7 +560,6 @@ void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
   // FIXME : Still an issue with the translation of the modelview (?)
   glGetFloatv(GL_MODELVIEW_MATRIX, modelMatrix);
   pushMatrix();
-  scale(scaleFactor, scaleFactor, scaleFactor);
   setModelMatrix();
 
   float pm[16];
@@ -595,15 +597,15 @@ GLuint AssimpRenderer::setupShaders() {
   v = glCreateShader(GL_VERTEX_SHADER);
   f = glCreateShader(GL_FRAGMENT_SHADER);
 
-  // TODO: Handle automatically the opengl capabilities of the platform
-  // OpengGL 2
-  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
-  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
-  handle_matrix_stack = false;
+//  // TODO: Handle automatically the opengl capabilities of the platform
+//  // OpengGL 2
+//  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
+//  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
+//  handle_matrix_stack = false;
 
-//  // OpenGL 3,3 and above
-//  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
-//  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+  // OpenGL 3,3 and above
+  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
+  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
 
 //  // Custom shaders
 //  static const std::string vertexShaderFile = "vertexShader.vert";
