@@ -546,6 +546,8 @@ void AssimpRenderer::renderScene(void) {
  */
 void AssimpRenderer::renderSceneToFB(const float *camera_pose) {
 
+  glEnable(GL_DEPTH_TEST);
+
   // Set up the camera position, 'old style'
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
