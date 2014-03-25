@@ -51,12 +51,14 @@ public:
   void AutomatedMapStart(void);
 
   inline SE3<> GetCurrentPose() const { return mse3CamFromWorld;}
+  inline int GetLostFrames() const { return mnLostFrames;}
   
   // Gets messages to be printed on-screen for the user.
   std::string GetMessageForUser();
   
 protected:
   bool b_automated_start;
+  bool b_ongoing_optimisation;
 
   KeyFrame mCurrentKF;            // The current working frame as a keyframe struct
 

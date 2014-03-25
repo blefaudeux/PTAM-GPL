@@ -388,7 +388,11 @@ void Tracker::TrackForInitialMap()
       for(list<Trail>::iterator i = mlTrails.begin(); i!=mlTrails.end(); i++)
         vMatches.push_back(pair<ImageRef, ImageRef>(i->irInitialPos,
                                                     i->irCurrentPos));
+
+      b_ongoing_optimisation = true; //TODO: Handle the 'hanged' state of the SLAM while initializing
       mMapMaker.InitFromStereo(mFirstKF, mCurrentKF, vMatches, mse3CamFromWorld);  // This will take some time!
+      b_ongoing_optimisation = false;
+
       mnInitialStage = TRAIL_TRACKING_COMPLETE;
     }
     else
@@ -464,13 +468,15 @@ int Tracker::TrailTracking_Advance()
       trail.irCurrentPos = irEnd;
       nGoodTrails++;
     }
-    if(mbDraw)
-    {
+
+    if(mbDraw)  {
+
       if(!bFound)
         glColor3f(0,1,1); // Failed trails flash purple before dying.
       else
         glColor3f(1,1,0);
       glVertex(trail.irInitialPos);
+
       if(bFound) glColor3f(1,0,0);
       glVertex(trail.irCurrentPos);
     }

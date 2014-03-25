@@ -33,7 +33,7 @@ class ARDriver
   ARDriver(const ATANCamera &cam, ImageRef irFrameSize, GLWindow2 &glw,
            string ARSceneFile = "");
 
-  void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld);
+  void Render(Image<Rgb<byte> > &imFrame, SE3<> se3CamFromWorld, bool render_3D_model = true);
   void Reset();
   void Init();
 
