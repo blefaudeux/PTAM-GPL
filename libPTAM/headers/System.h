@@ -10,7 +10,7 @@
 //
 #ifndef __SYSTEM_H
 #define __SYSTEM_H
-#include "VideoSource.h"
+#include "VideoSource_Linux.h"
 #include "GLWindow2.h"
 
 #include <cvd/image.h>
