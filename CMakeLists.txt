@@ -14,12 +14,10 @@ find_package(GLUT REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(DevIL REQUIRED)
 
-#message("\nGVars3 found in: \n ${GVARS3_INCLUDE_DIR} \n ${GVARS3_LIBRARIES}\n")
-#message("CVD found in: \n ${CVD_INCLUDE_DIR}\n")
-#message("TooN found in: \n ${TOON_INCLUDE_DIR}\n")
-
-# Recurse into the "libPTAM" and "camera_calibrator" subdirectories. This does not actually 
+# Recurse into subdirectories. This does not actually 
 # cause another cmake executable to run. The same process will walk through 
 # the project's entire directory structure.
-add_subdirectory(libPTAM)
-add_subdirectory(camera_calibrator)
+add_subdirectory(third_party) 		# Third party dependencies
+add_subdirectory(libPTAM)		# The mono-SLAM PTAM lib
+add_subdirectory(camera_calibrator)	# The application to calibrate cameras
+add_subdirectory(demoPTAM)		# A demo application
