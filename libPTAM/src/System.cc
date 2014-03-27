@@ -66,7 +66,7 @@ void System::resetMap(void) {
   this->mpMapMaker->RequestReset();
 
   // Wait until the reset has been done ?
-  // FIXME
+  // TODO
 }
 
 /*!

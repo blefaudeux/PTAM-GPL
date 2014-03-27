@@ -18,7 +18,7 @@ include_directories(${PROJECT_SOURCE_DIR}/headers)
 # Boost
 include_directories(${Boost_INCLUDE_DIRS})
 
-#configuariton global pour les mylibs :
+# Global config for third party libs:
 include_directories( ../third_party/TooN ../third_party/gvars ../third_party/cvd)
 
 # Set debug or release configurations
@@ -28,10 +28,10 @@ if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
     SET(CMAKE_VERBOSE_MAKEFILE ON)
 
     # Tell other CMake files that we're doing a debug build
-    SET( DEBUG_BUILD 1 )
+    SET(DEBUG_BUILD 1)
 
     # Tell C/C++ that we're doing a debug build
-    ADD_DEFINITIONS( -DDEBUG )
+    ADD_DEFINITIONS(-DDEBUG)
 endif()
 
 # Visual studio solutions handling
@@ -44,14 +44,14 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Create static and dynamic libraries
-add_library(PTAMs STATIC ${SRC} ${SRC_cvd} ${SRC_cvd_x} ${SRC_Gvars} ${HEADERS} ${HEAD_Gvars} ${HEAD_cvd})
-add_library(PTAMd SHARED ${SRC} ${SRC_cvd} ${SRC_cvd_x} ${SRC_Gvars} ${HEADERS} ${HEAD_Gvars} ${HEAD_cvd})
+add_library(PTAMs STATIC ${SRC} ${HEADERS})
+add_library(PTAMd SHARED ${SRC} ${HEADERS})
 
 # Set the link libraries :
 set(LINK_LIBS ${ASSIMP_LIBRARIES} ${IL_LIBRARIES} ${GLEW_LIBRARIES} ${DEVIL_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
 
-target_link_libraries(PTAMs ${LINK_LIBS} cvd TooN gvars)
-target_link_libraries(PTAMd ${LINK_LIBS} cvd TooN gvars)
+target_link_libraries(PTAMs ${LINK_LIBS} cvd gvars)
+target_link_libraries(PTAMd ${LINK_LIBS} cvd gvars)
 
 ### Define the installation procedure
 # -- System install (need root credentials)
