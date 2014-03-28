@@ -109,6 +109,11 @@ find_package(GLEW REQUIRED)
 
 # -ltiff -ljpeg -lpng -lpng -llapack -lGLU -lGL -lrt -ldc1394  -pthread -lX11 -lXext
 
+# Visual studio solutions handling
+if(ENABLE_SOLUTION_FOLDERS)
+  set_target_properties(cvd PROPERTIES FOLDER "cvd")
+endif()
+
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
     message( "INFO: DEBUG BUILD" )
@@ -122,17 +127,14 @@ if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
     ADD_DEFINITIONS( -DDEBUG )
 endif()
 
-# Visual studio solutions handling
-if(ENABLE_SOLUTION_FOLDERS)
-  set_target_properties(cvd PROPERTIES FOLDER "cvd")
-endif()
-
 if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
     message( "INFO: RELEASE BUILD" )
 endif()
 
-# Create static and dynamic libraries
-add_library(cvd STATIC ${SRC} ${HEADERS} ${HEAD_Gvars} ${HEAD_cvd})
+# Create ad-hoc library
+set(COMPILE_FLAGS ${COMPILE_FLAGS} "-fPIC")
+message("Current compile flags : " ${COMPILE_FLAGS})
+add_library(cvd SHARED ${SRC} ${HEADERS} ${HEAD_Gvars} ${HEAD_cvd})
 
 # Set the link libraries :
 set(LINK_LIBS ${ASSIMP_LIBRARIES}  ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})

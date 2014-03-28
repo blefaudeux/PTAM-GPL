@@ -19,5 +19,5 @@ find_package(DevIL REQUIRED)
 # the project's entire directory structure.
 add_subdirectory(third_party) 		# Third party dependencies
 add_subdirectory(libPTAM)		# The mono-SLAM PTAM lib
-add_subdirectory(camera_calibrator)	# The application to calibrate cameras
+#add_subdirectory(camera_calibrator)	# The application to calibrate cameras
 add_subdirectory(demoPTAM)		# A demo application
