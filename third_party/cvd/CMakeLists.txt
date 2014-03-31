@@ -4,7 +4,7 @@ project(cvd)
 cmake_minimum_required(VERSION 2.6)
 
 # Add all the files we're interested in (mostly for QTCreator)
-file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/cvd_src/*.h)
+file(GLOB HEAD_CVD ${PROJECT_SOURCE_DIR}/cvd_src/*.h)
 
 FILE(GLOB SRC "cvd_src/diskbuffer2.cc"
       "cvd_src/deinterlacebuffer.cc"
@@ -134,7 +134,7 @@ endif()
 # Create ad-hoc library
 set(COMPILE_FLAGS ${COMPILE_FLAGS} "-fPIC")
 message("Current compile flags : " ${COMPILE_FLAGS})
-add_library(cvd SHARED ${SRC} ${HEADERS} ${HEAD_Gvars} ${HEAD_cvd})
+add_library(cvd SHARED ${SRC} ${HEAD_Gvars} ${HEAD_cvd})
 
 # Set the link libraries :
 set(LINK_LIBS ${ASSIMP_LIBRARIES}  ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})

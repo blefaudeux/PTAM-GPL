@@ -15,17 +15,19 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
 
-# Get the PTAM lib and includes:
-find_path(PTAM_INCLUDE_DIR PTAM/System.h
-          HINTS "/usr/local/include"
-          PATH_SUFFIXES PTAM)
+# Define the extra dependencies (PTAM, CVD,..)
+include_directories(${PROJECT_SOURCE_DIR}/../libPTAM/headers)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/cvd_src)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/headers)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/src)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/cvd)
 
-set(PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
-include_directories(${PTAM_INCLUDE_DIR})
-
-
-find_library(PTAM_LIBRARY NAMES PTAMd libPTAMd
-             HINTS "/usr/local/lib")
+# DEBUG
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
 
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
@@ -46,7 +48,7 @@ endif()
 
 # Build the executable
 add_executable(CamCalibrator ${SRC} ${HEADERS})
-target_link_libraries(CamCalibrator PTAMs  ${OPENGL_LIBRARIES} ${PTAM_LIBRARY})
+target_link_libraries(CamCalibrator PTAMs cvd gvars ${OPENGL_LIBRARIES}) # ${PTAM_LIBRARY}
 
 ### Define the installation procedure
 #install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)

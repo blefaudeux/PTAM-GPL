@@ -4,8 +4,8 @@ project(libPTAM)
 cmake_minimum_required(VERSION 2.6)
 
 # Add all the files we're interested in (mostly for QTCreator)
-file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cc)
-file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
+file(GLOB SRC_PTAM ${PROJECT_SOURCE_DIR}/src/*.cc)
+file(GLOB HEAD_PTAM ${PROJECT_SOURCE_DIR}/headers/*.h)
 
 # Define the included directories
 find_package(Assimp REQUIRED)
@@ -44,8 +44,8 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Create static and dynamic libraries
-add_library(PTAMs STATIC ${SRC} ${HEADERS})
-add_library(PTAMd SHARED ${SRC} ${HEADERS})
+add_library(PTAMs STATIC ${SRC_PTAM} ${HEAD_PTAM})
+add_library(PTAMd SHARED ${SRC_PTAM} ${HEAD_PTAM})
 
 # Set the link libraries :
 set(LINK_LIBS ${ASSIMP_LIBRARIES} ${IL_LIBRARIES} ${GLEW_LIBRARIES} ${DEVIL_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
@@ -55,5 +55,5 @@ target_link_libraries(PTAMd ${LINK_LIBS} cvd gvars)
 
 ### Define the installation procedure
 # -- System install (need root credentials)
-install(FILES ${HEADERS}  ${HEAD_Gvars} DESTINATION /usr/local/include/PTAM)
+install(FILES ${HEAD_PTAM} ${HEAD_Gvars} DESTINATION /usr/local/include/PTAM)
 install(TARGETS PTAMd PTAMs DESTINATION /usr/local/lib)
