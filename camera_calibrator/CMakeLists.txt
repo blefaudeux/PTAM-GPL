@@ -48,7 +48,7 @@ endif()
 
 # Build the executable
 add_executable(CamCalibrator ${SRC} ${HEADERS})
-target_link_libraries(CamCalibrator PTAMs cvd gvars ${OPENGL_LIBRARIES}) # ${PTAM_LIBRARY}
+target_link_libraries(CamCalibrator cvd gvars PTAMs ${OPENGL_LIBRARIES}) # ${PTAM_LIBRARY}
 
 ### Define the installation procedure
 #install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)

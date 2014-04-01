@@ -15,9 +15,9 @@ find_package(LAPACK REQUIRED)
 find_package(DevIL REQUIRED)
 
 # Recurse into subdirectories. This does not actually 
-# cause another cmake executable to run. The same process will walk through 
+# cause another cmake executable to run. The same process will walk through
 # the project's entire directory structure.
-add_subdirectory(third_party) 		# Third party dependencies
-add_subdirectory(libPTAM)		# The mono-SLAM PTAM lib
+add_subdirectory(third_party)       # Third party dependencies
+add_subdirectory(libPTAM)           # The mono-SLAM PTAM lib
 add_subdirectory(camera_calibrator)	# The application to calibrate cameras
-add_subdirectory(demoPTAM)		# A demo application
+add_subdirectory(demoPTAM)          # A demo application

@@ -4,7 +4,17 @@ project(cvd)
 cmake_minimum_required(VERSION 2.6)
 
 # Add all the files we're interested in (mostly for QTCreator)
-file(GLOB HEAD_CVD ${PROJECT_SOURCE_DIR}/cvd_src/*.h)
+file(GLOB HEAD_CVD_1 ${PROJECT_SOURCE_DIR}/cvd_src/*.h)
+file(GLOB HEAD_CVD_2 ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB HEAD_CVD_3 ${PROJECT_SOURCE_DIR}/headers/*.h)
+file(GLOB HEAD_CVD_4 ${PROJECT_SOURCE_DIR}/cvd/*.h)
+set(HEAD_CVD ${HEAD_CVD_1} ${HEAD_CVD_2} ${HEAD_CVD_3} ${HEAD_CVD_4})
+
+# Define the included directories
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/cvd_src)
+include_directories(${PROJECT_SOURCE_DIR}/headers)
 
 FILE(GLOB SRC "cvd_src/diskbuffer2.cc"
       "cvd_src/deinterlacebuffer.cc"
@@ -91,12 +101,6 @@ FILE(GLOB SRC "cvd_src/diskbuffer2.cc"
       "cvd_src/brezenham.cc"
       "cvd_src/draw_toon.cc")
 
-# Define the included directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/cvd_src)
-include_directories(${PROJECT_SOURCE_DIR}/headers)
-
 # Get dependencies
 find_package(Boost COMPONENTS system thread REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -106,6 +110,7 @@ find_package(LAPACK REQUIRED)
 find_package(DevIL REQUIRED)
 find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(DC1394 REQUIRED)
 
 # -ltiff -ljpeg -lpng -lpng -llapack -lGLU -lGL -lrt -ldc1394  -pthread -lX11 -lXext
 
@@ -137,4 +142,5 @@ message("Current compile flags : " ${COMPILE_FLAGS})
 add_library(cvd SHARED ${SRC} ${HEAD_Gvars} ${HEAD_cvd})
 
 # Set the link libraries :
-set(LINK_LIBS ${ASSIMP_LIBRARIES}  ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
+set(LINK_LIBS ${ASSIMP_LIBRARIES} ${DC1394_LIBRARIES} ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
+target_link_libraries(cvd ${LINK_LIBS})
