@@ -107,12 +107,15 @@ find_package(OpenGL REQUIRED)
 
 find_package(GLUT REQUIRED)
 find_package(LAPACK REQUIRED)
-find_package(DevIL REQUIRED)
-find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(DC1394 REQUIRED)
+find_package(DC1394 REQUIRED)
+find_package(TIFF REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(PNG REQUIRED)
+find_package(X11 REQUIRED)
 
-# -ltiff -ljpeg -lpng -lpng -llapack -lGLU -lGL -lrt -ldc1394  -pthread -lX11 -lXext
+# -lrt  -pthread -lXext
 
 # Visual studio solutions handling
 if(ENABLE_SOLUTION_FOLDERS)
@@ -142,5 +145,7 @@ message("Current compile flags : " ${COMPILE_FLAGS})
 add_library(cvd SHARED ${SRC} ${HEAD_Gvars} ${HEAD_cvd})
 
 # Set the link libraries :
-set(LINK_LIBS ${ASSIMP_LIBRARIES} ${DC1394_LIBRARIES} ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
+set(LINK_LIBS ${DC1394_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES})
+set(LINK_LIBS ${LINK_LIBS} ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${X11_LIBRARIES})
+
 target_link_libraries(cvd ${LINK_LIBS})

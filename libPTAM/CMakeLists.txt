@@ -10,7 +10,6 @@ file(GLOB HEAD_PTAM ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the included directories
 find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
-message("Assimp found : \n " ${ASSIMP_LIBRARIES})
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
