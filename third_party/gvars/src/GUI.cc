@@ -20,7 +20,7 @@
 */
 
 #include "gvars3/GUI.h"
-#include "src/GUI_impl.h"
+#include "GUI_impl.h"
 #include "gvars3/GStringUtil.h"
 
 #include <cctype>

@@ -4,118 +4,113 @@ project(cvd)
 cmake_minimum_required(VERSION 2.6)
 
 # Add all the files we're interested in (mostly for QTCreator)
-file(GLOB HEAD_CVD_1 ${PROJECT_SOURCE_DIR}/cvd_src/*.h)
-file(GLOB HEAD_CVD_2 ${PROJECT_SOURCE_DIR}/src/*.h)
-file(GLOB HEAD_CVD_3 ${PROJECT_SOURCE_DIR}/headers/*.h)
-file(GLOB HEAD_CVD_4 ${PROJECT_SOURCE_DIR}/cvd/*.h)
-set(HEAD_CVD ${HEAD_CVD_1} ${HEAD_CVD_2} ${HEAD_CVD_3} ${HEAD_CVD_4})
+file(GLOB HEAD_CVD_1 ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB HEAD_CVD_2 ${PROJECT_SOURCE_DIR}/headers/*.h)
+file(GLOB HEAD_CVD_3 ${PROJECT_SOURCE_DIR}/headers/internal/*.h)
+
+set(HEAD_CVD ${HEAD_CVD_1} ${HEAD_CVD_2} ${HEAD_CVD_3})
 
 # Define the included directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/cvd_src)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
 
-FILE(GLOB SRC "cvd_src/diskbuffer2.cc"
-      "cvd_src/deinterlacebuffer.cc"
-      "cvd_src/exceptions.cc"
-      "cvd_src/image_io.cc"
-      "cvd_src/bayer.cc"
-      "cvd_src/morphology.cc"
-      "cvd_src/colourspace_convert.cc"
-      "cvd_src/draw.cc"
-      "cvd_src/yuv422.cc"
-      "cvd_src/yuv420.cc"
-      "cvd_src/image_io/pnm_grok.cc"
-      "cvd_src/image_io/bmp.cc"
-      "cvd_src/image_io/bmp_read.cc"
-      "cvd_src/image_io/bmp_write.cc"
-      "cvd_src/image_io/cvdimage.cc"
-      "cvd_src/image_io/fits.cc"
-      "cvd_src/image_io/fitswrite.cc"
-      "cvd_src/image_io/save_postscript.cc"
-      "cvd_src/image_io/text_write.cc"
-      "cvd_src/image_io/text.cc"
-      "cvd_src/fast_corner.cc"
-      "cvd_src/convolution.cc"
-      "cvd_src/nonmax_suppression.cc"
-      "cvd_src/timeddiskbuffer.cc"
-      "cvd_src/videosource.cc"
-      "cvd_src/connected_components.cc"
-      "cvd_src/cvd_timer.cc"
-      "cvd_src/i686/yuv411_to_stuff_MMX_64.cc"
-      "cvd_src/SSE2/half_sample.cc"
-      "cvd_src/noarch/convert_rgb_to_y.cc"
-      "cvd_src/i686/convolve_gaussian.cc"
-      "cvd_src/i686/gradient.cc"
-      "cvd_src/noarch/yuv420p_to_rgb_runner.cc"
-      "cvd_src/noarch/yuv422_wrapper.cc"
-      "cvd_src/i686/median_3x3.cc"
-      "cvd_src/i686/utility_float.cc"
-      "cvd_src/i686/utility_byte_differences.cc"
-      "cvd_src/i686/utility_double_int.cc"
-      "cvd_src/SSE2/two_thirds_sample.cc"
-      "cvd_src/fast/fast_7_detect.cc"
-      "cvd_src/fast/fast_7_score.cc"
-      "cvd_src/slower_corner_7.cc"
-      "cvd_src/fast/fast_8_detect.cc"
-      "cvd_src/fast/fast_8_score.cc"
-      "cvd_src/slower_corner_8.cc"
-      "cvd_src/fast/fast_9_detect.cc"
-      "cvd_src/fast/fast_9_score.cc"
-      "cvd_src/fast_corner_9_nonmax.cc"
-      "cvd_src/fast/fast_10_detect.cc"
-      "cvd_src/fast/fast_10_score.cc"
-      "cvd_src/fast/fast_11_detect.cc"
-      "cvd_src/fast/fast_11_score.cc"
-      "cvd_src/slower_corner_11.cc"
-      "cvd_src/fast/fast_12_detect.cc"
-      "cvd_src/fast/fast_12_score.cc"
-      "cvd_src/SSE2/faster_corner_9.cc"
-      "cvd_src/SSE2/faster_corner_10.cc"
-      "cvd_src/SSE2/faster_corner_12.cc"
-      "cvd_src/Linux/dvbuffer3_dc1394v2.cc"
-      "cvd_src/videosource_dvbuffer.cc"
-      "cvd_src/Linux/videosource_nov4l1buffer.cc"
-      "cvd_src/Linux/v4lbuffer.cc"
-      "cvd_src/Linux/videosource_v4lbuffer.cc"
-      "cvd_src/Linux/v4l2buffer.cc"
-      "cvd_src/Linux/v4lcontrol.cc"
-      "cvd_src/OSX/videosource_noqtbuffer.cc"
-      "cvd_src/posix/get_time_of_day_ns.cc"
-      "cvd_src/synchronized.cc"
-      "cvd_src/eventobject.cc"
-      "cvd_src/thread.cc"
-      "cvd_src/posix/sched_yield.cc"
-      "cvd_src/noarch/posix_memalign.cc"
-      "cvd_src/videodisplay.cc"
-      "cvd_src/glwindow.cc"
-      "cvd_src/gltext.cc"
-      "cvd_src/image_io/jpeg.cc"
-      "cvd_src/image_io/tiff.cc"
-      "cvd_src/image_io/tiffwrite.cc"
-      "cvd_src/image_io/png.cc"
-      "cvd_src/videosource_novideofilebuffer.cc"
-      "cvd_src/globlist.cc"
-      "cvd_src/tensor_voting.cc"
-      "cvd_src/brezenham.cc"
-      "cvd_src/draw_toon.cc")
+file(GLOB SRC "src/diskbuffer2.cc"
+      "src/deinterlacebuffer.cc"
+      "src/exceptions.cc"
+      "src/image_io.cc"
+      "src/bayer.cc"
+      "src/morphology.cc"
+      "src/colourspace_convert.cc"
+      "src/draw.cc"
+      "src/yuv422.cc"
+      "src/yuv420.cc"
+      "src/image_io/pnm_grok.cc"
+      "src/image_io/bmp.cc"
+      "src/image_io/bmp_read.cc"
+      "src/image_io/bmp_write.cc"
+      "src/image_io/cvdimage.cc"
+      "src/image_io/fits.cc"
+      "src/image_io/fitswrite.cc"
+      "src/image_io/save_postscript.cc"
+      "src/image_io/text_write.cc"
+      "src/image_io/text.cc"
+      "src/fast_corner.cc"
+      "src/convolution.cc"
+      "src/nonmax_suppression.cc"
+      "src/timeddiskbuffer.cc"
+      "src/videosource.cc"
+      "src/connected_components.cc"
+      "src/cvd_timer.cc"
+      "src/i686/yuv411_to_stuff_MMX_64.cc"
+      "src/SSE2/half_sample.cc"
+      "src/noarch/convert_rgb_to_y.cc"
+      "src/i686/convolve_gaussian.cc"
+      "src/i686/gradient.cc"
+      "src/noarch/yuv420p_to_rgb_runner.cc"
+      "src/noarch/yuv422_wrapper.cc"
+      "src/i686/median_3x3.cc"
+      "src/i686/utility_float.cc"
+      "src/i686/utility_byte_differences.cc"
+      "src/i686/utility_double_int.cc"
+      "src/SSE2/two_thirds_sample.cc"
+      "src/fast/fast_7_detect.cc"
+      "src/fast/fast_7_score.cc"
+      "src/slower_corner_7.cc"
+      "src/fast/fast_8_detect.cc"
+      "src/fast/fast_8_score.cc"
+      "src/slower_corner_8.cc"
+      "src/fast/fast_9_detect.cc"
+      "src/fast/fast_9_score.cc"
+      "src/fast_corner_9_nonmax.cc"
+      "src/fast/fast_10_detect.cc"
+      "src/fast/fast_10_score.cc"
+      "src/fast/fast_11_detect.cc"
+      "src/fast/fast_11_score.cc"
+      "src/slower_corner_11.cc"
+      "src/fast/fast_12_detect.cc"
+      "src/fast/fast_12_score.cc"
+      "src/SSE2/faster_corner_9.cc"
+      "src/SSE2/faster_corner_10.cc"
+      "src/SSE2/faster_corner_12.cc"
+      "src/Linux/dvbuffer3_dc1394v2.cc"
+      "src/videosource_dvbuffer.cc"
+      "src/Linux/videosource_nov4l1buffer.cc"
+      "src/Linux/v4lbuffer.cc"
+      "src/Linux/videosource_v4lbuffer.cc"
+      "src/Linux/v4l2buffer.cc"
+      "src/Linux/v4lcontrol.cc"
+      "src/OSX/videosource_noqtbuffer.cc"
+      "src/posix/get_time_of_day_ns.cc"
+      "src/synchronized.cc"
+      "src/eventobject.cc"
+      "src/thread.cc"
+      "src/posix/sched_yield.cc"
+      "src/noarch/posix_memalign.cc"
+      "src/videodisplay.cc"
+      "src/glwindow.cc"
+      "src/gltext.cc"
+      "src/image_io/jpeg.cc"
+      "src/image_io/tiff.cc"
+      "src/image_io/tiffwrite.cc"
+      "src/image_io/png.cc"
+      "src/videosource_novideofilebuffer.cc"
+      "src/globlist.cc"
+      "src/tensor_voting.cc"
+      "src/brezenham.cc"
+      "src/draw_toon.cc")
 
 # Get dependencies
-find_package(Boost COMPONENTS system thread REQUIRED)
 find_package(OpenGL REQUIRED)
-
 find_package(GLUT REQUIRED)
+find_package(GLEW REQUIRED)
 find_package(LAPACK REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(DC1394 REQUIRED)
 find_package(DC1394 REQUIRED)
 find_package(TIFF REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(X11 REQUIRED)
-
-# -lrt  -pthread -lXext
 
 # Visual studio solutions handling
 if(ENABLE_SOLUTION_FOLDERS)
@@ -142,10 +137,10 @@ endif()
 # Create ad-hoc library
 set(COMPILE_FLAGS ${COMPILE_FLAGS} "-fPIC")
 message("Current compile flags : " ${COMPILE_FLAGS})
-add_library(cvd SHARED ${SRC} ${HEAD_Gvars} ${HEAD_cvd})
+add_library(cvd SHARED ${SRC} ${HEAD_CVD})
 
 # Set the link libraries :
-set(LINK_LIBS ${DC1394_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES})
+set(LINK_LIBS ${DC1394_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}  ${GLEW_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES})
 set(LINK_LIBS ${LINK_LIBS} ${TIFF_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${X11_LIBRARIES})
 
-target_link_libraries(cvd ${LINK_LIBS})
+target_link_libraries(cvd ${LINK_LIBS} pthread rt) # final librairies are Linux only - do something for windows !

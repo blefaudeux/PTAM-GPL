@@ -26,13 +26,11 @@ file(GLOB OBJS_SRC  "src/gvars3.cc"
 
 set(COMPILE_FLAGS ${COMPILE_FLAGS} "-DGUI_HAVE_READLINE")
 
-file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/gvars3/*.h)
+file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 file(GLOB HEADERS_X ${PROJECT_SOURCE_DIR}/src/*.h)
 
 # Define the included directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/headers)
 include_directories( ../TooN)
 
 # Set debug or release configurations
@@ -58,8 +56,11 @@ if( CMAKE_BUILD_TYPE MATCHES "[Rr][Ee][Ll][Ee][Aa][Ss][Ee]" )
 endif()
 
 # Create libraries
-add_library(gvars_headless SHARED ${HEADLESS_SRC} ${EXTRA_SRC})
-add_library(gvars SHARED ${OBJS_SRC} ${EXTRA_SRC})
+add_library(gvars_headless SHARED ${HEADLESS_SRC} ${EXTRA_SRC} ${HEADERS} ${HEADERS_X})
+add_library(gvars SHARED ${OBJS_SRC} ${EXTRA_SRC} ${HEADERS} ${HEADERS_X})
 
 # Set the link libraries :
 set(LINK_LIBS ${ASSIMP_LIBRARIES}  ${DEVIL_LIBRARIES} ${GLUT_LIBRARIES} ${LAPACK_LIBRARIES} ${Boost_LIBRARIES} ${ASSIMP_LIBRARIES})
+
+target_link_libraries(gvars_headless ${LINK_LIBS} pthread rt) # final librairies are Linux only - do something for windows !
+target_link_libraries(gvars ${LINK_LIBS} pthread rt)

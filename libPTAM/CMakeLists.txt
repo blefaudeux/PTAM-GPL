@@ -8,11 +8,22 @@ file(GLOB SRC_PTAM ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB HEAD_PTAM ${PROJECT_SOURCE_DIR}/headers/*.h)
 
 # Define the included directories
-find_package(Assimp REQUIRED)
-find_package(GLEW REQUIRED)
-
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/headers)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/gvars/headers)
+
+# Find packages
+# Try to find the needed packages
+set(Boost_USE_STATIC_LIBS  OFF)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost COMPONENTS system thread REQUIRED)
+find_package(Assimp REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+find_package(LAPACK REQUIRED)
+find_package(DevIL REQUIRED)
 
 # Boost
 include_directories(${Boost_INCLUDE_DIRS})

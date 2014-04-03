@@ -26,15 +26,15 @@ find_package(GLEW REQUIRED)
 find_package(Assimp REQUIRED)
 find_package(DevIL REQUIRED)
 
-# Get the PTAM lib and inclues:
-find_path(PTAM_INCLUDE_DIR PTAM/System.h
-          HINTS "/usr/local/include"
-          PATH_SUFFIXES PTAM)
+## Get the PTAM lib and inclues:
+#find_path(PTAM_INCLUDE_DIR PTAM/System.h
+#          HINTS "/usr/local/include"
+#          PATH_SUFFIXES PTAM)
 
-set (PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
+#set (PTAM_INCLUDE_DIR ${PTAM_INCLUDE_DIR}/PTAM)
 
-find_library(PTAM_LIBRARY NAMES PTAMd libPTAMd
-             HINTS "/usr/local/lib")
+#find_library(PTAM_LIBRARY NAMES PTAMd libPTAMd
+#             HINTS "/usr/local/lib")
 
 # Define the included directories
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -42,8 +42,7 @@ include_directories(${PROJECT_SOURCE_DIR}/headers)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
-include_directories(${PTAM_INCLUDE_DIR})
-
+include_directories(${PROJECT_SOURCE_DIR}/../libPTAM/headers)
 
 message("\nPTAM lib :\n ${PTAM_LIBRARY}\n ${PTAM_INCLUDE_DIR}\n")
 

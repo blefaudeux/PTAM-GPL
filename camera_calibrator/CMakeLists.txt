@@ -12,22 +12,19 @@ file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 
 # Define the included directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
 
 # Define the extra dependencies (PTAM, CVD,..)
 include_directories(${PROJECT_SOURCE_DIR}/../libPTAM/headers)
-include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/cvd_src)
-include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/headers)
-include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/src)
-include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd)
-include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/cvd)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/headers) # we'll link against those libraries later on
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/cvd/headers/internal)
+include_directories(${PROJECT_SOURCE_DIR}/../third_party/gvars/headers)
 
 # DEBUG
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()
+#get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+#foreach(dir ${dirs})
+#  message(STATUS "dir='${dir}'")
+#endforeach()
 
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
@@ -48,7 +45,7 @@ endif()
 
 # Build the executable
 add_executable(CamCalibrator ${SRC} ${HEADERS})
-target_link_libraries(CamCalibrator cvd gvars PTAMs ${OPENGL_LIBRARIES}) # ${PTAM_LIBRARY}
+target_link_libraries(CamCalibrator cvd gvars PTAMd ${OPENGL_LIBRARIES})
 
 ### Define the installation procedure
 #install(TARGETS PTAM_dynamic PTAM_static DESTINATION ${PROJECT_SOURCE_DIR}/lib)
