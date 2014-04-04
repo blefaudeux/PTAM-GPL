@@ -10,6 +10,7 @@ using namespace GVars3;
 
 #define UDP_SRV_ADDRESS '192.168.1.1'
 
+/*
 VideoSource_UDP::VideoSource_UDP()
 {
   cout << "  VideoSource_UDP: Opening video stream..." << endl;
@@ -39,11 +40,12 @@ void VideoSource::GetAndFillFrameBWandRGB(Image<byte> &imBW, Image<Rgb<byte> > &
 
   // TODO
 
-  /*
-  V4LBuffer<yuv422>* pvb = (V4LBuffer<yuv422>*) mptr;
-  VideoFrame<yuv422> *pVidFrame = pvb->get_frame();
-  convert_image(*pVidFrame, imBW);
-  convert_image(*pVidFrame, imRGB);
-  pvb->put_frame(pVidFrame);
-  */
+
+//  V4LBuffer<yuv422>* pvb = (V4LBuffer<yuv422>*) mptr;
+//  VideoFrame<yuv422> *pVidFrame = pvb->get_frame();
+//  convert_image(*pVidFrame, imBW);
+//  convert_image(*pVidFrame, imRGB);
+//  pvb->put_frame(pVidFrame);
+
 }
+*/

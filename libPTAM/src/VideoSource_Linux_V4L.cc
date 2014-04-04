@@ -12,7 +12,7 @@ using namespace GVars3;
 VideoSource::VideoSource()
 {
   cout << "  VideoSource_Linux: Opening video source..." << endl;
-  string QuickCamFile = GV3::get<string>("VideoSource.V4LDevice", "/dev/video1"); //TODO: properly handle the video source
+  string QuickCamFile = GV3::get<string>("VideoSource.V4LDevice", "/dev/video0"); //TODO: properly handle the video source
 //  ImageRef irSize = GV3::get<ImageRef>("VideoSource.Resolution", ImageRef(640,480));
   ImageRef irSize = GV3::get<ImageRef>("VideoSource.Resolution", ImageRef(1024,768));
   int nFrameRate = GV3::get<int>("VideoSource.Framerate", 60);
