@@ -296,7 +296,7 @@ bool AssimpRenderer::import3DFromFile(const std::string& pFile) {
   cout << "AssimpRenderer : Model scale " << tmp << endl;
   tmp = scene_max.y - scene_min.y > tmp?scene_max.y - scene_min.y:tmp;
   tmp = scene_max.z - scene_min.z > tmp?scene_max.z - scene_min.z:tmp;
-  scaleFactor = 1.f / tmp;
+  scaleFactor = 10.f / tmp;
 
   // We're done. Everything will be cleaned up by the importer destructor
   return true;
