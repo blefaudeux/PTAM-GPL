@@ -599,13 +599,13 @@ GLuint AssimpRenderer::setupShaders() {
 
   // TODO: Handle automatically the opengl capabilities of the platform
   // OpengGL 2
-  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
-  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
-  handle_matrix_stack = false;
+//  static const std::string vertexShaderFile = "dirLightAmbDiffSpec.vert";
+//  static const std::string fragmentShaderFile = "dirLightAmbDiffSpec.frag";
+//  handle_matrix_stack = false;
 
-//  // OpenGL 3,3 and above
-//  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
-//  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
+  // OpenGL 3,3 and above
+  static const std::string vertexShaderFile = "dirlightdiffambpix.vert";
+  static const std::string fragmentShaderFile = "dirlightdiffambpix.frag";
 
 //  // Custom shaders
 //  static const std::string vertexShaderFile = "vertexShader.vert";
