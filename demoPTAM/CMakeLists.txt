@@ -26,7 +26,7 @@ find_package(GLEW REQUIRED)
 find_package(Assimp REQUIRED)
 find_package(DevIL REQUIRED)
 
-# Get the PTAM lib and inclues:
+# Get the PTAM lib and includes:
 find_path(PTAM_INCLUDE_DIR PTAM/System.h
           HINTS "/usr/local/include"
           PATH_SUFFIXES PTAM)

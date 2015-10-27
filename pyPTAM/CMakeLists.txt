@@ -20,12 +20,10 @@ find_package(DevIL REQUIRED)
 #find_package(PythonLibs REQUIRED) # Will depend on the Boost version...
 
 # Find Python 2.7 (Boost <1.54)
-find_path(PYTHON_INCLUDE_DIR python2.7/Python.h
-          HINTS "/usr/include")
+find_path(PYTHON_INCLUDE_DIR python2.7/Python.h HINTS "/usr/include")
 set(PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIR}/python2.7)
 
-find_library(PYTHON_LIBRARIES NAMES python2.7 libpython2.7
-             HINTS "/usr/lib/x86_64-linux-gnu")
+find_library(PYTHON_LIBRARIES NAMES python2.7 libpython2.7 HINTS "/usr/lib/x86_64-linux-gnu")
 
 message("\n Python libs : \n ${PYTHON_INCLUDE_DIR}\n ${PYTHON_LIBRARIES}\n")
 
