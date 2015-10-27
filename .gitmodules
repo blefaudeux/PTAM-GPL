@@ -1,0 +1,9 @@
+[submodule "libPTAM/submodules/libcvd"]
+	path = libPTAM/submodules/libcvd
+	url = https://github.com/edrosten/libcvd.git
+[submodule "libPTAM/submodules/gvars"]
+	path = libPTAM/submodules/gvars
+	url = https://github.com/edrosten/gvars.git
+[submodule "libPTAM/submodules/TooN"]
+	path = libPTAM/submodules/TooN
+	url = https://github.com/edrosten/TooN.git
