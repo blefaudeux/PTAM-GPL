@@ -3,4 +3,5 @@
 *.a
 *.autosave
 *.idea
+.directory
 build
