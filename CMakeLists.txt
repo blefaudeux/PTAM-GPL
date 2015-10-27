@@ -22,8 +22,8 @@ ExternalProject_Add ( dep_toon
        GIT_TAG "master"
        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/TooN
        UPDATE_COMMAND ""
-       CONFIGURE_COMMAND "./configure"
-       BUILD_COMMAND "make"
+       CONFIGURE_COMMAND ""
+       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
        INSTALL_COMMAND "make install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/TooN" )
 
 ExternalProject_Get_Property(dep_toon install_dir)
@@ -36,8 +36,8 @@ ExternalProject_Add ( dep_cvd
        GIT_REPOSITORY "https://github.com/edrosten/libcvd.git"
        GIT_TAG "master"
        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/CVD
-       CONFIGURE_COMMAND "./configure"
-       BUILD_COMMAND "make"
+       CONFIGURE_COMMAND ""
+       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
        INSTALL_COMMAND "make install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/CVD" )
 
 add_library(CVD STATIC IMPORTED)
@@ -48,8 +48,8 @@ ExternalProject_Add ( dep_gvars3
        GIT_REPOSITORY "https://github.com/edrosten/gvars.git"
        GIT_TAG "master"
        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/GVars3
-       CONFIGURE_COMMAND "./configure"
-       BUILD_COMMAND "make"
+       CONFIGURE_COMMAND ""
+       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
        INSTALL_COMMAND "make install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/GVars3" )
 
 add_library(GVars3 STATIC IMPORTED)
