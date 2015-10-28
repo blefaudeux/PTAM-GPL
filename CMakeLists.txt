@@ -20,7 +20,7 @@ include(ExternalProject)
 # Force a build of the dependencies at configuration time
 function (build_external_project target prefix url install_script) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
 
-    set(trigger_build_dir ${CMAKE_BINARY_DIR}/dependencies/force_${target})
+    set(trigger_build_dir ${CMAKE_BINARY_DIR}/temp_dependency/force_${target})
 
     #mktemp dir in build tree
     file(MAKE_DIRECTORY ${trigger_build_dir} ${trigger_build_dir}/build)

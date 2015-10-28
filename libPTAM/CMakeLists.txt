@@ -7,12 +7,29 @@ cmake_minimum_required(VERSION 2.6)
 file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 
-# Define the included directories
+# Define the external dependencies
 find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(CVD HINTS ${PROJECT_BUILD_DIR}/CVD)
-find_package(GVars3 HINTS ${PROJECT_BUILD_DIR}/GVars3)
-find_package(TooN HINTS ${PROJECT_BUILD_DIR}/TooN)
+
+# Those are internal, present in the build directory
+
+find_path(CVD_INCLUDE_DIR cvd/abs.h
+          HINTS ${PROJECT_BINARY_DIR}/CVD )
+
+find_library(CVD_LIBRARY NAMES cvd libcvd
+             HINTS ${PROJECT_BINARY_DIR}/CVD
+             PATH_SUFFIXES lib)
+
+include(FindPackageHandleStandardArgs)
+# handle the QUIETLY and REQUIRED arguments and set LIBXML2_FOUND to TRUE
+# if all listed variables are TRUE
+find_package_handle_standard_args(libcvd  DEFAULT_MSG
+                                  CVD_LIBRARY CVD_INCLUDE_DIR)
+
+mark_as_advanced(CVD_INCLUDE_DIR CVD_LIBRARY )
+
+find_package(GVars3 HINTS GVars3)
+find_package(TooN HINTS TooN)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
