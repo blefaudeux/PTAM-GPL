@@ -10,8 +10,9 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the included directories
 find_package(Assimp REQUIRED)
 find_package(GLEW REQUIRED)
-message("Assimp found : \n " ${ASSIMP_LIBRARIES})
-
+find_package(CVD HINTS ${PROJECT_BUILD_DIR}/CVD)
+find_package(GVars3 HINTS ${PROJECT_BUILD_DIR}/GVars3)
+find_package(TooN HINTS ${PROJECT_BUILD_DIR}/TooN)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)

@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8) 
 project (PTAM)
 
-# Try to find the needed packages
+# Try to find the upfront needed packages
 set(Boost_USE_STATIC_LIBS  OFF)
 set(Boost_USE_MULTITHREADED ON)
 find_package(Boost COMPONENTS system thread REQUIRED)
@@ -14,48 +14,52 @@ if(DevIL_NOT_FOUND)
     message("Please install developper Image Library, including ilut")
 endif()
 
-# Grab ¹ build the external libraries
+# Grab/ build the external libraries
 include(ExternalProject)
 
-ExternalProject_Add ( dep_toon
-       GIT_REPOSITORY "https://github.com/edrosten/TooN.git"
-       GIT_TAG "master"
-       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/TooN
-       UPDATE_COMMAND ""
-       CONFIGURE_COMMAND chmod +x ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh
-       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
-       INSTALL_COMMAND ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh <SOURCE_DIR> ${CMAKE_CURRENT_BINARY_DIR}/TooN )
+# Force a build of the dependencies at configuration time
+function (build_external_project target prefix url install_script) #FOLLOWING ARGUMENTS are the CMAKE_ARGS of ExternalProject_Add
 
-ExternalProject_Get_Property(dep_toon install_dir)
+    set(trigger_build_dir ${CMAKE_BINARY_DIR}/dependencies/force_${target})
 
-add_library(TooN STATIC IMPORTED)
-set_property(TARGET TooN PROPERTY IMPORTED_LOCATION ${install_dir}/lib/TooN)
-add_dependencies(TooN dep_toon)       
+    #mktemp dir in build tree
+    file(MAKE_DIRECTORY ${trigger_build_dir} ${trigger_build_dir}/build)
 
-ExternalProject_Add ( dep_cvd 
-       GIT_REPOSITORY "https://github.com/edrosten/libcvd.git"
-       GIT_TAG "master"
-       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/CVD
-       CONFIGURE_COMMAND chmod +x ${PROJECT_SOURCE_DIR}/install_scripts/cvd.sh
-       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
-       INSTALL_COMMAND ${PROJECT_SOURCE_DIR}/install_scripts/cvd.sh <SOURCE_DIR> ${CMAKE_CURRENT_BINARY_DIR}/CVD/.)
+    #generate false dependency project
+    set(CMAKE_LIST_CONTENT "
+    cmake_minimum_required(VERSION 2.8)
 
-add_library(CVD STATIC IMPORTED)
-set_property(TARGET CVD PROPERTY IMPORTED_LOCATION ${install_dir}/lib/CVD)
-add_dependencies(CVD dep_cvd)       
+    include(ExternalProject)
+    ExternalProject_add(${target}
+            PREFIX ${prefix}
+            GIT_REPOSITORY ${url}
+            CMAKE_ARGS ${ARGN}
+            CONFIGURE_COMMAND chmod +x ${install_script}
+            BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
+            INSTALL_COMMAND ${install_script} <SOURCE_DIR> ${prefix}
+            )
 
-ExternalProject_Add ( dep_gvars3 
-       GIT_REPOSITORY "https://github.com/edrosten/gvars.git"
-       GIT_TAG "master"
-       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/GVars3
-       CONFIGURE_COMMAND chmod +x ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh
-       BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
-       INSTALL_COMMAND ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh <SOURCE_DIR> ${CMAKE_CURRENT_BINARY_DIR}/GVars3/. )
+            add_custom_target(trigger_${target})
+            add_dependencies(trigger_${target} ${target})")
 
-add_library(GVars3 STATIC IMPORTED)
-set_property(TARGET GVars3 PROPERTY IMPORTED_LOCATION ${install_dir}/lib/GVars3)
-add_dependencies(GVars3 dep_gvars3)       
+    file(WRITE ${trigger_build_dir}/CMakeLists.txt "${CMAKE_LIST_CONTENT}")
 
+    execute_process(COMMAND ${CMAKE_COMMAND} ..
+        WORKING_DIRECTORY ${trigger_build_dir}/build
+        )
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        WORKING_DIRECTORY ${trigger_build_dir}/build
+        )
+
+endfunction()
+
+build_external_project(toon ${CMAKE_CURRENT_BINARY_DIR}/TooN "https://github.com/edrosten/TooN.git" ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh)
+
+build_external_project(cvd ${CMAKE_CURRENT_BINARY_DIR}/CVD "https://github.com/edrosten/libcvd.git" ${PROJECT_SOURCE_DIR}/install_scripts/cvd.sh)
+
+build_external_project(gvars3 ${CMAKE_CURRENT_BINARY_DIR}/GVars3 "https://github.com/edrosten/gvars.git" ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh)
+
+# Dependencies are handled, we can proceed with our actual library
 add_subdirectory(libPTAM)
 
 # Build the demo app if needed
