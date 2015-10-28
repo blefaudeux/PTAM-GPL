@@ -22,9 +22,9 @@ ExternalProject_Add ( dep_toon
        GIT_TAG "master"
        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/TooN
        UPDATE_COMMAND ""
-       CONFIGURE_COMMAND ""
+       CONFIGURE_COMMAND chmod +x ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh
        BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
-       INSTALL_COMMAND make install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/TooN )
+       INSTALL_COMMAND ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh <SOURCE_DIR> ${CMAKE_CURRENT_BINARY_DIR}/TooN )
 
 ExternalProject_Get_Property(dep_toon install_dir)
 
@@ -48,9 +48,9 @@ ExternalProject_Add ( dep_gvars3
        GIT_REPOSITORY "https://github.com/edrosten/gvars.git"
        GIT_TAG "master"
        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/GVars3
-       CONFIGURE_COMMAND ""
+       CONFIGURE_COMMAND chmod +x ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh
        BUILD_COMMAND cd <SOURCE_DIR> && ./configure && make
-       INSTALL_COMMAND make install PREFIX=${CMAKE_CURRENT_BINARY_DIR}/GVars3 )
+       INSTALL_COMMAND ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh <SOURCE_DIR> ${CMAKE_CURRENT_BINARY_DIR}/GVars3/. )
 
 add_library(GVars3 STATIC IMPORTED)
 set_property(TARGET GVars3 PROPERTY IMPORTED_LOCATION ${install_dir}/lib/GVars3)
