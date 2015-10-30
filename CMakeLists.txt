@@ -58,6 +58,7 @@ build_external_project(toon ${CMAKE_CURRENT_BINARY_DIR}/TooN "https://github.com
 build_external_project(cvd ${CMAKE_CURRENT_BINARY_DIR}/CVD "https://github.com/edrosten/libcvd.git" ${PROJECT_SOURCE_DIR}/install_scripts/cvd.sh)
 
 build_external_project(gvars3 ${CMAKE_CURRENT_BINARY_DIR}/GVars3 "https://github.com/edrosten/gvars.git" ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh)
+add_definitions(-DCVD_HAVE_TOON)
 
 # Dependencies are handled, we can proceed with our actual library
 add_subdirectory(libPTAM)

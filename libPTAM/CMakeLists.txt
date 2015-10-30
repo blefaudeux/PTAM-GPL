@@ -26,6 +26,8 @@ find_package_handle_standard_args(libcvd  DEFAULT_MSG
 set(CVD_LIBRARIES ${CVD_LIBRARY} )
 set(CVD_INCLUDE_DIRS ${CVD_INCLUDE_DIR} )
 
+message("CVD include : " ${CVD_INCLUDE_DIR})
+
 mark_as_advanced(CVD_INCLUDE_DIR CVD_LIBRARY )
 
 # -- GVars3
@@ -57,7 +59,7 @@ mark_as_advanced(TOON_INCLUDE_DIR)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/headers)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} ${CVD_INCLUDE_DIR} ${TOON_INCLUDE_DIR} ${GVARS3_INCLUDE_DIR})
 
 # Set debug or release configurations
 if( CMAKE_BUILD_TYPE MATCHES "[Dd][Ee][Bb][Uu][Gg]" )
