@@ -7,24 +7,6 @@ cmake_minimum_required(VERSION 2.6)
 file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 
-# Get the GUI and other dependencies
-# - Get to know where all the findCMake are
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../libPTAM/dependencies)
-message("Additional lookup directory : ${CMAKE_MODULE_PATH}")
-
-# Try to find the needed packages
-set(Boost_USE_STATIC_LIBS  OFF)
-set(Boost_USE_MULTITHREADED ON)
-find_package(Boost COMPONENTS system thread REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(LAPACK REQUIRED)
-find_package(CVD REQUIRED)
-find_package(GVars3 REQUIRED)
-find_package(TooN REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(Assimp REQUIRED)
-find_package(DevIL REQUIRED)
 
 # Get the PTAM lib and includes:
 find_path(PTAM_INCLUDE_DIR PTAM/System.h
@@ -43,7 +25,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLUT_INCLUDE_DIRS})
 include_directories(${PTAM_INCLUDE_DIR})
-
 
 message("\nPTAM lib :\n ${PTAM_LIBRARY}\n ${PTAM_INCLUDE_DIR}\n")
 

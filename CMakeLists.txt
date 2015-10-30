@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 2.8) 
 project (PTAM)
 
+# Build options
+SET(DEMO         FALSE     CACHE  BOOL    "Build the demo app")
+SET(PYTHON_PTAM   FALSE     CACHE  BOOL    "Build the python package")
+
 # Try to find the upfront needed packages
 set(Boost_USE_STATIC_LIBS  OFF)
 set(Boost_USE_MULTITHREADED ON)
