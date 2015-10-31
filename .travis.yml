@@ -18,6 +18,9 @@ addons:
     - g++
     - libboost-all-dev
     - libeigen3-dev
+    - libdevil-dev
+    - libglew-dev
+    - libassimp-dev
 
 notifications:
   email: none

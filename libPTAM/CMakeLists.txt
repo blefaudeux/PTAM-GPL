@@ -51,10 +51,10 @@ find_path(TOON_INCLUDE_DIR
   HINTS ${PROJECT_BINARY_DIR}/../TooN
 )
 
-# Handle a plural naming..             
+# Handle a plural naming..
 set(TOON_INCLUDE_DIRS ${TOON_INCLUDE_DIR} )
 find_package_handle_standard_args(TooN  DEFAULT_MSG TOON_INCLUDE_DIR)
-                                  
+
 mark_as_advanced(TOON_INCLUDE_DIR)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -90,10 +90,9 @@ target_link_libraries(PTAMd ${LINK_LIBS})
 
 ### Define the installation procedure
 # -- Local install
-# install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)
-# install(FILES ${HEADERS} DESTINATION ${PROJECT_SOURCE_DIR}/include)
+install(TARGETS PTAMd PTAMs DESTINATION ${PROJECT_SOURCE_DIR}/lib)
+install(FILES ${HEADERS} DESTINATION ${PROJECT_SOURCE_DIR}/include)
 
 # -- System install
-install(FILES ${HEADERS} DESTINATION /usr/local/include/PTAM)
 install(TARGETS PTAMd PTAMs DESTINATION /usr/local/lib)
-
+install(FILES ${HEADERS} DESTINATION /usr/local/include/PTAM)
