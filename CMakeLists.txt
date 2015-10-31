@@ -1,9 +1,10 @@
-cmake_minimum_required (VERSION 2.8) 
+cmake_minimum_required (VERSION 2.8)
 project (PTAM)
 
 # Build options
 SET(DEMO         FALSE     CACHE  BOOL    "Build the demo app")
 SET(PYTHON_PTAM   FALSE     CACHE  BOOL    "Build the python package")
+SET(CAMERA_CALIBRATOR   FALSE     CACHE  BOOL    "A tool to calibrate cameras on the fly")
 
 # Try to find the upfront needed packages
 set(Boost_USE_STATIC_LIBS  OFF)
@@ -79,5 +80,6 @@ endif()
 
 # Add the python bindings if needed
 if(PYTHON_PTAM)
+    add_dependencies( demoPTAM libPTAM)
     add_subdirectory(pyPTAM)
 endif()

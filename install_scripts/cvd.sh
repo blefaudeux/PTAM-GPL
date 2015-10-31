@@ -1,9 +1,8 @@
 #!/bin/sh
-mkdir $2/lib
-mkdir $2/cvd
-mkdir $2/cvd/internal
-mkdir $2/cvd/Linux
-
+mkdir -p $2/lib
+mkdir -p $2/cvd
+mkdir -p $2/cvd/internal
+mkdir -p $2/cvd/Linux
 
 cp $1/libcvd* $2/lib
 cp $1/cvd/* $2/cvd

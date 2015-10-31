@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir $2/TooN
+mkdir -p $2/TooN
 
 cp $1/*.h $2/TooN/.
 cp -r $1/optimization $2/TooN

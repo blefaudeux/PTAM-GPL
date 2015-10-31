@@ -21,6 +21,8 @@ addons:
     - libdevil-dev
     - libglew-dev
     - libassimp-dev
+    - glew-utils
+    - libglewmx-dev
 
 notifications:
   email: none
