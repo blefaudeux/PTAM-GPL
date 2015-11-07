@@ -6,7 +6,12 @@ compiler:
     
 before_install: 
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libboost-all-dev libeigen3-dev libdevil-dev libglew-dev libassimp-dev glew-utils libglewmx-dev ubuntu-toolchain-r-test
+  - sudo apt-get install -qq libboost-all-dev libeigen3-dev libdevil-dev libglew-dev libassimp-dev glew-utils libglewmx-dev
+    
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
     
 script:
   - mkdir build
