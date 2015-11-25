@@ -13,6 +13,7 @@ find_package(Boost COMPONENTS system thread REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 find_package(LAPACK REQUIRED)
+find_package(GLEW REQUIRED)
 
 find_package(DevIL REQUIRED)
 if(DevIL_NOT_FOUND)

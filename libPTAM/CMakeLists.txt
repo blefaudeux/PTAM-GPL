@@ -10,7 +10,7 @@ file(GLOB HEADERS ${PROJECT_SOURCE_DIR}/headers/*.h)
 # Define the external dependencies
 include_directories(dependencies)
 find_package(Assimp REQUIRED)
-find_package(GLEW REQUIRED)
+
 
 # Those are internal, present in the build directory
 # -- CVD
