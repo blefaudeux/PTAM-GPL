@@ -59,10 +59,13 @@ function (build_external_project target prefix url install_script) #FOLLOWING AR
 
 endfunction()
 
+message("\n\n---- Clone and build TOON ----")
 build_external_project(toon ${CMAKE_CURRENT_BINARY_DIR}/TooN "https://github.com/edrosten/TooN.git" ${PROJECT_SOURCE_DIR}/install_scripts/toon.sh)
 
+message("\n\n---- Clone and build CVD ----")
 build_external_project(cvd ${CMAKE_CURRENT_BINARY_DIR}/CVD "https://github.com/edrosten/libcvd.git" ${PROJECT_SOURCE_DIR}/install_scripts/cvd.sh)
 
+message("\n\n---- Clone and build GVARS ----")
 build_external_project(gvars3 ${CMAKE_CURRENT_BINARY_DIR}/GVars3 "https://github.com/edrosten/gvars.git" ${PROJECT_SOURCE_DIR}/install_scripts/gvars.sh)
 add_definitions(-DCVD_HAVE_TOON)
 
