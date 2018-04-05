@@ -1,4 +1,4 @@
-PTAM-GPL
+PTAM-GPL [![Build Status](https://travis-ci.org/blefaudeux/PTAM-GPL.svg?branch=master)](https://travis-ci.org/blefaudeux/PTAM-GPL)
 ========
 
 PTAM (Parallel Tracking and Mapping) re-released under GPLv3.
