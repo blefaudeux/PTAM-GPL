@@ -17,6 +17,7 @@ addons:
     - glew-utils
     - libglewmx-dev
     - freeglut3-dev
+    - libblas-dev
 
     
 script:
