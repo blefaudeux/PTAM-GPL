@@ -16,6 +16,7 @@ addons:
     - libassimp-dev
     - glew-utils
     - libglewmx-dev
+    - freeglut3-dev
 
     
 script:
