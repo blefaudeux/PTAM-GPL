@@ -18,6 +18,7 @@ addons:
     - libglewmx-dev
     - freeglut3-dev
     - libblas-dev
+    - liblapack-dev
 
     
 script:
