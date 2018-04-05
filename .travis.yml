@@ -1,17 +1,22 @@
 language: cpp
 
 compiler:
-  - g++
   - clang
-    
-before_install: 
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libboost-all-dev libeigen3-dev libdevil-dev libglew-dev libassimp-dev glew-utils libglewmx-dev
+  
     
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
+    packages:
+    - libboost-all-dev
+    - libeigen3-dev
+    - libdevil-dev
+    - libglew-dev
+    - libassimp-dev
+    - glew-utils
+    - libglewmx-dev
+
     
 script:
   - mkdir build
